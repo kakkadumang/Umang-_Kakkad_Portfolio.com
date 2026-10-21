@@ -2312,10 +2312,10 @@ window.loadAndRenderPortfolio = async function(isRealtime = false) {
         if (x.classList.contains('border-suOrange')) x.style.borderColor = o;
       });
 
-      // Synchronized Live Visitor Count (increments live across Android, Laptop, Local & GitHub)
+      // Synchronized Live Visitor Count (reads and displays without auto-incrementing)
       const countEl = document.getElementById("total-visit-count");
       if (countEl && typeof window.getLiveSynchronizedViews === "function") {
-        window.getLiveSynchronizedViews(Number(settings.totalViews) || 246).then(c => {
+        window.getLiveSynchronizedViews(Number(settings.totalViews) || 248, false).then(c => {
           countEl.textContent = c.toLocaleString("en-IN");
           countEl.title = "Realtime verified portfolio visits, synchronized live across all devices";
         });
@@ -2893,8 +2893,8 @@ if (window.supabase) {
 </script>
 
 <script>
-// Real-Time Cross-Device Synchronized Visitor Counter (Increments on every open/refresh on Mobile, Laptop, Local & GitHub)
-window.getLiveSynchronizedViews = async function(baseViews = 246) {
+// Real-Time Cross-Device Visitor Counter (Increments only on genuine site open, NOT every 5 seconds)
+window.getLiveSynchronizedViews = async function(baseViews = 248, shouldIncrement = false) {
     try {
         const allStore = JSON.parse(localStorage.getItem("uk_portfolio_content_all") || "{}");
         if (allStore?.site_settings?.totalViews) {
@@ -2903,26 +2903,35 @@ window.getLiveSynchronizedViews = async function(baseViews = 246) {
         }
     } catch (_) {}
 
+    let alreadyCountedInTab = false;
     try {
-        const resp = await fetch('https://api.visitorbadge.io/api/visitors?path=kakkadumang_portfolio', {
-            cache: 'no-store'
-        });
-        if (resp.ok) {
-            const svg = await resp.text();
-            const match = svg.match(/VISITORS:\s*(\d+)/i) || svg.match(/<text[^>]*>(\d+)<\/text>/i) || svg.match(/>(\d+)<\/text>/i);
-            if (match && match[1]) {
-                const hits = parseInt(match[1], 10);
-                if (!isNaN(hits) && hits > 0) {
-                    const total = baseViews + hits;
-                    try { localStorage.setItem('uk_synced_view_cache', String(total)); } catch (_) {}
-                    return total;
-                }
-            }
-        }
+        alreadyCountedInTab = Boolean(sessionStorage.getItem("uk_session_open_counted"));
     } catch (_) {}
 
-    let cached = Number(localStorage.getItem('uk_synced_view_cache') || (baseViews + 6)) + 1;
-    try { localStorage.setItem('uk_synced_view_cache', String(cached)); } catch (_) {}
+    // Only increment when the site is opened/reloaded as a new visit, never automatically in a loop
+    if (shouldIncrement && !alreadyCountedInTab) {
+        try {
+            sessionStorage.setItem("uk_session_open_counted", "true");
+            const resp = await fetch('https://api.visitorbadge.io/api/visitors?path=uk_umangkakkad_portfolio_2026', {
+                cache: 'no-store'
+            });
+            if (resp.ok) {
+                const svg = await resp.text();
+                const match = svg.match(/VISITORS:\s*(\d+)/i) || svg.match(/<text[^>]*>(\d+)<\/text>/i) || svg.match(/>(\d+)<\/text>/i);
+                if (match && match[1]) {
+                    const hits = parseInt(match[1], 10);
+                    if (!isNaN(hits) && hits > 0) {
+                        const total = baseViews + hits;
+                        try { localStorage.setItem('uk_synced_view_cache', String(total)); } catch (_) {}
+                        return total;
+                    }
+                }
+            }
+        } catch (_) {}
+    }
+
+    // Read and return the current synchronized view count without incrementing
+    let cached = Number(localStorage.getItem('uk_synced_view_cache') || (baseViews + 1));
     return cached;
 };
 
@@ -2931,12 +2940,12 @@ window.getLiveSynchronizedViews = async function(baseViews = 246) {
     if (!countElement) return;
 
     try {
-        const finalCount = await window.getLiveSynchronizedViews(246);
+        const finalCount = await window.getLiveSynchronizedViews(248, true);
         countElement.textContent = finalCount.toLocaleString("en-IN");
-        countElement.title = "Real page views recorded across live website, synchronized live across all devices";
+        countElement.title = "Real page views recorded across live website, synchronized across all devices";
     } catch (_) {
         if (countElement && (countElement.textContent === "—" || countElement.textContent === "-")) {
-            countElement.textContent = "252";
+            countElement.textContent = "249";
         }
     }
 })();
