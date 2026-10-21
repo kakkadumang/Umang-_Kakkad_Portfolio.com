@@ -1155,7 +1155,7 @@
         <div class="max-w-7xl mx-auto px-4 lg:px-8">
             <h2 class="text-3xl font-bold text-suBlue uppercase tracking-wide section-title mb-10">About the Developer</h2>
             <div class="grid lg:grid-cols-3 gap-12">
-                <div class="lg:col-span-2 text-gray-700 leading-relaxed space-y-6">
+                <div id="about-bio-container" class="lg:col-span-2 text-gray-700 leading-relaxed space-y-6">
                     <p class="text-lg font-medium text-suBlue">I am Umang Kakkad, a passionate Software Developer currently pursuing my Master of Computer Applications (MCA) at GLS University, Ahmedabad.</p>
                     <p>With a comprehensive technical foundation across core programming languages such as C, C++, Java, C#, and Python, I specialize in building structured, reliable applications. My database expertise spans MySQL and SQL Server, enabling me to design optimized schemas and implement ACID-compliant transactional workflows.</p>
                     <p>During my professional internship at AnantaX Technology in Rajkot, I gained valuable practical industry exposure, working with modern software development concepts, technical execution tasks, and active professional team collaboration. I enjoy tackling software challenges and continuously expanding my skillset across web and desktop platforms.</p>
@@ -1670,10 +1670,13 @@
     </div>
 
     <script>
-        // Simple Mobile Menu Toggle
-        document.getElementById('mobile-menu-btn').addEventListener('click', function() {
-            var links = document.getElementById('nav-links');
-            if (links.classList.contains('hidden')) {
+        // Android & Mobile Touch-Friendly Navigation Menu Toggle
+        (function() {
+            const menuBtn = document.getElementById('mobile-menu-btn');
+            const links = document.getElementById('nav-links');
+            if (!menuBtn || !links) return;
+
+            function openMenu() {
                 links.classList.remove('hidden');
                 links.classList.add('flex', 'flex-col', 'w-full', 'pb-4', 'pt-2');
                 links.querySelectorAll('li').forEach(li => li.classList.add('w-full', 'text-center'));
@@ -1681,11 +1684,49 @@
                     a.classList.remove('border-r', 'border-l');
                     a.classList.add('border-b', 'border-blue-800');
                 });
-            } else {
+                menuBtn.setAttribute('aria-expanded', 'true');
+                menuBtn.innerHTML = '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>';
+            }
+
+            function closeMenu() {
                 links.classList.add('hidden');
                 links.classList.remove('flex', 'flex-col', 'w-full', 'pb-4', 'pt-2');
+                menuBtn.setAttribute('aria-expanded', 'false');
+                menuBtn.innerHTML = '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>';
             }
-        });
+
+            function toggleMenu(e) {
+                if (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                if (links.classList.contains('hidden')) {
+                    openMenu();
+                } else {
+                    closeMenu();
+                }
+            }
+
+            menuBtn.addEventListener('click', toggleMenu);
+
+            // Auto-close when clicking any nav link on mobile/Android
+            links.querySelectorAll('a').forEach(a => {
+                a.addEventListener('click', () => {
+                    if (window.innerWidth < 1024) {
+                        closeMenu();
+                    }
+                });
+            });
+
+            // Auto-close when clicking outside navigation on mobile
+            document.addEventListener('click', (e) => {
+                if (window.innerWidth < 1024 && !links.classList.contains('hidden')) {
+                    if (!links.contains(e.target) && !menuBtn.contains(e.target)) {
+                        closeMenu();
+                    }
+                }
+            });
+        })();
 
         // Dynamic Notice Board Logic — Connected to Live Database
         let notices = [];
@@ -1741,17 +1782,8 @@
             renderNotices();
         }
 
-        if (notices.length) renderNotices();
-});
-
-        function deleteNotice(index) {
-            notices.splice(index, 1);
-            renderNotices();
-        }
-
         // Initialize notices on load
-        renderNotices();
-
+        if (notices.length) renderNotices();
 
         // Automatic background photo slideshow — profile photo is the first slide.
         (function() {
@@ -2223,12 +2255,14 @@ window.loadAndRenderPortfolio = async function(isRealtime = false) {
 
     // 2. Fetch live data from Supabase Cloud Database with cache-busting timestamp
     try {
-      const fetchUrl = `${SUPABASE_URL.replace(/\/$/, '')}/rest/v1/portfolio_content?select=section,content,updated_at&_cb=${Date.now()}`;
+      const fetchUrl = `${SUPABASE_URL.replace(/\/$/, '')}/rest/v1/portfolio_content?select=section,content,updated_at`;
       const r = await fetch(fetchUrl, {
         headers: {
           apikey: SUPABASE_PUBLISHABLE_KEY,
           Authorization: 'Bearer ' + SUPABASE_PUBLISHABLE_KEY,
-          Accept: 'application/json'
+          Accept: 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
         },
         cache: 'no-store'
       });
@@ -2304,7 +2338,7 @@ window.loadAndRenderPortfolio = async function(isRealtime = false) {
         if (x) x.textContent = about.title;
       }
       if (about.description) {
-        const descContainer = document.querySelector('#about .lg\:col-span-2');
+        const descContainer = document.getElementById('about-bio-container') || document.querySelector('#about [class*="col-span-2"]');
         if (descContainer) {
           const paragraphs = String(about.description).split(/\n+/).map(p => p.trim()).filter(Boolean);
           if (paragraphs.length) {
@@ -2323,7 +2357,7 @@ window.loadAndRenderPortfolio = async function(isRealtime = false) {
           x = document.createElement('p');
           x.dataset.supabaseSkills = 'true';
           x.className = 'text-sm font-semibold text-suBlue mt-4 border-t border-gray-200 pt-3';
-          document.querySelector('#about .lg\:col-span-2')?.appendChild(x);
+          (document.getElementById('about-bio-container') || document.querySelector('#about [class*="col-span-2"]'))?.appendChild(x);
         }
         if (x) x.textContent = 'Skills: ' + about.skills.join(' · ');
       }
@@ -2648,6 +2682,11 @@ window.loadAndRenderPortfolio = async function(isRealtime = false) {
           `<span class="mr-12 inline-flex items-center"><span class="bg-red-600 text-white text-xs px-2 py-0.5 rounded font-bold mr-2">UPDATE</span><span class="text-gray-800 font-medium">${esc(itemText)}</span></span>`
         ).join('');
       }
+      try {
+        if (typeof renderNotices === 'function' && validItems.length) {
+          renderNotices(validItems.map(t => ({ type: 'UPDATE', text: t })));
+        }
+      } catch (_) {}
     }
 
     // 13. Dynamic Highlights Stat Counters
