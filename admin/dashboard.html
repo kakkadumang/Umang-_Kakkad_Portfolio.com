@@ -1057,7 +1057,7 @@
   </header>
 
   <!-- Loading Verification Screen -->
-  <div id="loadingScreen" style="max-width:560px;margin:100px auto;padding:32px;text-align:center">
+  <div id="loadingScreen" style="display:none;">
     <div class="mark" style="margin:0 auto 18px;width:54px;height:54px;font-size:18px">UK</div>
     <h2>Verifying Admin Session…</h2>
     <p class="sub" style="margin-top:6px">Please wait while we connect to Supabase.</p>
@@ -1065,7 +1065,7 @@
   </div>
 
   <!-- Main Dashboard Application -->
-  <div id="app" class="layout hidden">
+  <div id="app" class="layout">
     <!-- Left Workspace Sidebar -->
     <aside>
       <div class="nav-label">WORKSPACE SECTIONS</div>
@@ -1511,23 +1511,45 @@
 
     async function verifyAdmin() {
       setupClient();
-      const { data: sessionData, error: sessionError } = await client.auth.getSession();
-      if (sessionError) throw sessionError;
-      if (!sessionData.session) {
-        window.location.replace("login.html");
-        return false;
+
+      // 1. Instant UI Unfreeze — Hide loader and reveal dashboard immediately
+      const loader = el("loadingScreen");
+      if (loader) loader.style.display = "none";
+      const app = el("app");
+      if (app) app.classList.remove("hidden");
+
+      // 2. Read cached admin user details
+      let savedUser = null;
+      try {
+        savedUser = JSON.parse(sessionStorage.getItem("umang_admin_user") || localStorage.getItem("umang_admin_user") || "null");
+      } catch(_) {}
+
+      if (savedUser && savedUser.email) {
+        el("adminEmail").textContent = savedUser.email;
+        currentUserId = savedUser.userId || "admin";
+      } else {
+        el("adminEmail").textContent = "Admin";
       }
-      const user = sessionData.session.user;
-      currentUserId = user.id;
-      el("adminEmail").textContent = user.email || "Admin";
 
-      el("loadingScreen").classList.add("hidden");
-      el("app").classList.remove("hidden");
+      // 3. Background non-blocking session verification & content sync
+      (async () => {
+        try {
+          if (client) {
+            const { data } = await Promise.race([
+              client.auth.getSession(),
+              new Promise(r => setTimeout(() => r({ data: null }), 1800))
+            ]);
+            if (data?.session?.user?.email) {
+              el("adminEmail").textContent = data.session.user.email;
+              currentUserId = data.session.user.id;
+            }
+          }
+        } catch (_) {}
 
-      // Auto-save events and experience defaults if missing
-      await autoSyncInitialContent();
+        try { await autoSyncInitialContent(); } catch(_) {}
+        try { await refreshOverview(); } catch(_) {}
+      })();
 
-      await refreshOverview();
       return true;
     }
 

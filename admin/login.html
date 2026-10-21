@@ -983,12 +983,21 @@
           throw error;
         }
 
-        // Store session in sessionStorage for smooth multi-page navigation
-        sessionStorage.setItem("umang_admin_user", JSON.stringify({
+        // Store session for smooth multi-page navigation across file:// and web
+        const userData = {
           email: email,
           userId: data.user.id,
           loginTime: Date.now()
-        }));
+        };
+        sessionStorage.setItem("umang_admin_user", JSON.stringify(userData));
+        localStorage.setItem("umang_admin_user", JSON.stringify(userData));
+
+        if (data.session) {
+          try {
+            sessionStorage.setItem("umang_supabase_session", JSON.stringify(data.session));
+            localStorage.setItem("umang_supabase_session", JSON.stringify(data.session));
+          } catch(_) {}
+        }
 
         showMsg("✓ Login successful! Redirecting to Dashboard…", "success");
 
