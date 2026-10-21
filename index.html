@@ -260,10 +260,23 @@
             }
 
             .header-profile {
-                width: 48px;
-                height: 48px;
-                flex-basis: 48px;
+                width: 44px !important;
+                height: 44px !important;
+                flex-basis: 44px !important;
                 border-width: 2px;
+            }
+
+            .uk-badge-ring {
+                width: 62px !important;
+                height: 62px !important;
+            }
+
+            .uk-badge-text {
+                font-size: 22px !important;
+            }
+
+            .header-signature-inline img {
+                height: 24px !important;
             }
         }
 
@@ -759,33 +772,28 @@
         <div class="max-w-7xl mx-auto px-4 lg:px-8 header-main">
 
             <!-- Identity -->
-            <div class="header-identity flex items-center justify-between gap-4 lg:gap-6 flex-wrap lg:flex-nowrap">
-                <div class="flex items-center gap-4 lg:gap-5">
-                    <!-- Bigger Premium Executive UK Logo -->
-                    <div class="header-uk-badge flex-shrink-0" aria-label="Umang Kakkad Royal Monogram">
-                        <div class="uk-badge-ring">
-                            <span class="uk-badge-text">UK</span>
-                        </div>
-                    </div>
-                    <div class="min-w-0">
-                        <h1 class="text-2xl lg:text-3xl font-extrabold text-suBlue uppercase tracking-wide leading-tight">Umang Kakkad</h1>
-                        <p class="text-sm lg:text-base font-semibold text-gray-700 tracking-wider mt-0.5">Software Developer & MCA Student</p>
-                        <p class="text-xs text-gray-500 mt-1 flex items-center gap-1.5 font-medium">
-                            <svg class="w-3.5 h-3.5 text-suOrange flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
-                            GLS University, Ahmedabad (Gujarat)
-                        </p>
+            <div class="header-identity flex items-start sm:items-center gap-3.5 sm:gap-5 flex-1 min-w-0">
+                <!-- Premium Executive UK Logo -->
+                <div class="header-uk-badge flex-shrink-0" aria-label="Umang Kakkad Royal Monogram">
+                    <div class="uk-badge-ring">
+                        <span class="uk-badge-text">UK</span>
                     </div>
                 </div>
-                <!-- Premium Signature Card with Owned • Designed • Developed By -->
-                <div class="header-signature-card flex flex-col items-center justify-center px-4 py-2.5 bg-gradient-to-br from-white via-blue-50/40 to-amber-50/30 border border-gray-200 rounded-xl shadow-xs flex-shrink-0" title="Officially Owned, Designed & Developed by Umang Kakkad">
-                    <div class="text-[9px] font-extrabold uppercase tracking-widest text-suBlue flex items-center gap-1.5 mb-0.5">
-                        <span class="w-1.5 h-1.5 rounded-full bg-suOrange inline-block"></span>
-                        Verified Signature
-                    </div>
-                    <img src="assets/images/umang-signature.png" alt="Official Handwritten signature of Umang Kakkad" class="h-10 lg:h-11 w-auto object-contain my-0.5" style="filter: contrast(1.15);">
-                    <div class="text-[10px] font-extrabold text-gray-700 uppercase tracking-wider text-center mt-0.5 border-t border-gray-200 pt-1">
-                        OWNED • DESIGNED • DEVELOPED
-                        <span class="block text-[9px] font-bold text-suBlue tracking-widest">BY UMANG KAKKAD</span>
+                <div class="min-w-0 flex-1">
+                    <h1 class="text-xl sm:text-2xl lg:text-3xl font-extrabold text-suBlue uppercase tracking-wide leading-tight">Umang Kakkad</h1>
+                    <p class="text-xs sm:text-sm lg:text-base font-semibold text-gray-700 tracking-wider mt-0.5">Software Developer &amp; MCA Student</p>
+                    <p id="header-university" class="header-university text-[11px] sm:text-xs text-gray-500 mt-1 flex items-center gap-1.5 font-medium">
+                        <svg class="w-3.5 h-3.5 text-suOrange flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                        <span>GLS University, Ahmedabad (Gujarat)</span>
+                    </p>
+                    
+                    <!-- Signature + Owned • Designed • Developed directly under GLS University -->
+                    <div class="header-signature-inline flex items-center gap-2.5 sm:gap-3.5 mt-2 pt-1.5 border-t border-gray-200/60 flex-wrap sm:flex-nowrap">
+                        <img src="assets/images/umang-signature.png" alt="Handwritten signature of Umang Kakkad" class="h-7 sm:h-8 lg:h-9 w-auto object-contain flex-shrink-0" style="filter: contrast(1.15);">
+                        <div class="leading-tight">
+                            <span class="text-gray-700 font-bold uppercase tracking-wider text-[9px] sm:text-[10px] block">OWNED • DESIGNED • DEVELOPED</span>
+                            <span class="text-suBlue font-extrabold tracking-widest text-[8px] sm:text-[9px] block">BY UMANG KAKKAD</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1679,31 +1687,47 @@
         });
 
         // Dynamic Notice Board Logic
-        let notices = JSON.parse(localStorage.getItem('umang_notices_v2')) || [
-            { type: 'NEW', text: 'PORTFOLIO REDESIGN — Welcome to my newly launched academic portfolio featuring an upgraded UI, professional gallery, and complete technical details.' },
-            { type: 'INFO', text: 'ISRO AI/ML Course — Currently pursuing a 5-Day Artificial Intelligence & Machine Learning Course by ISRO / IIRS.' },
-            { type: 'UPDATE', text: 'Android Performance Optimization is currently in progress for mobile platforms.' }
-        ];
+        let notices = [];
+        try {
+            const allStore = JSON.parse(localStorage.getItem('uk_portfolio_content_all') || '{}');
+            if (Array.isArray(allStore.notices) && allStore.notices.length) {
+                notices = allStore.notices.map(n => typeof n === 'string' ? { type: 'UPDATE', text: n } : { type: n.type || 'UPDATE', text: n.text || '' });
+            } else {
+                const legacy = JSON.parse(localStorage.getItem('umang_notices_v2') || '[]');
+                if (Array.isArray(legacy) && legacy.length) notices = legacy;
+            }
+        } catch (_) {}
+
+        if (!notices.length) {
+            notices = [
+                { type: 'NEW', text: 'PORTFOLIO REDESIGN — Welcome to my newly launched academic portfolio featuring an upgraded UI, professional gallery, and complete technical details.' },
+                { type: 'INFO', text: 'ISRO AI/ML Course — Currently pursuing a 5-Day Artificial Intelligence & Machine Learning Course by ISRO / IIRS.' },
+                { type: 'UPDATE', text: 'Android Performance Optimization is currently in progress for mobile platforms.' }
+            ];
+        }
 
         function renderNotices() {
             const marquee = document.getElementById('notice-marquee');
             const list = document.getElementById('notice-list');
+            if (!marquee) return;
             
             // Render marquee
             marquee.innerHTML = notices.map(n => 
-                `<span class="mr-12"><span class="bg-red-600 text-white text-xs px-2 py-1 rounded font-bold mr-2">${n.type}</span>${n.text}</span>`
+                `<span class="mr-12 inline-flex items-center"><span class="bg-red-600 text-white text-xs px-2 py-0.5 rounded font-bold mr-2">${n.type}</span><span class="text-gray-800 font-medium">${n.text}</span></span>`
             ).join('');
 
             // Render admin list
-            list.innerHTML = notices.map((n, index) => 
-                `<li class="flex justify-between items-start gap-2 bg-gray-50 p-2 border border-gray-200 rounded">
-                    <span class="flex-1"><strong class="text-red-600 text-[10px] mr-1">[${n.type}]</strong> <span class="text-gray-700">${n.text}</span></span>
-                    <button onclick="deleteNotice(${index})" class="text-red-500 hover:text-red-700 text-xs font-bold px-2">&times;</button>
-                </li>`
-            ).join('');
+            if (list) {
+                list.innerHTML = notices.map((n, index) => 
+                    `<li class="flex justify-between items-start gap-2 bg-gray-50 p-2 border border-gray-200 rounded">
+                        <span class="flex-1"><strong class="text-red-600 text-[10px] mr-1">[${n.type}]</strong> <span class="text-gray-700">${n.text}</span></span>
+                        <button onclick="deleteNotice(${index})" class="text-red-500 hover:text-red-700 text-xs font-bold px-2">&times;</button>
+                    </li>`
+                ).join('');
+            }
 
             // Save to localStorage
-            localStorage.setItem('umang_notices_v2', JSON.stringify(notices));
+            try { localStorage.setItem('umang_notices_v2', JSON.stringify(notices)); } catch (_) {}
         }
 
         function toggleNoticeModal() {
@@ -2195,7 +2219,7 @@
     if(about && !Array.isArray(about)){
       if(about.name){document.querySelectorAll('.header-identity h1,#home .hero-content h1').forEach(x=>x.textContent=about.name);}
       if(about.role){const x=document.querySelector('.header-identity p');if(x)x.textContent=about.role;const y=document.querySelector('#about .bg-suGray li:first-child span');if(y)y.textContent=about.role;}
-      if(about.university){const x=document.querySelector('.header-identity p:last-child');if(x)x.textContent=about.university;const y=document.querySelector('#about .bg-suGray li:nth-child(2) span');if(y)y.textContent=about.university;}
+      if(about.university){const x=document.getElementById('header-university')||document.querySelector('.header-identity .header-university')||document.querySelector('.header-identity p:last-child');if(x){const s=x.querySelector('span');if(s)s.textContent=about.university;else x.textContent=about.university;}const y=document.querySelector('#about .bg-suGray li:nth-child(2) span');if(y)y.textContent=about.university;}
       if(about.title){const x=document.querySelector('#about h2');if(x)x.textContent=about.title;}
       if(about.description){const x=document.querySelector('#about .lg\\:col-span-2 p');if(x)x.textContent=about.description;const h=document.querySelector('#home .hero-content p');if(h)h.textContent=about.description;}
       if(Array.isArray(about.skills)){let x=document.querySelector('#about [data-supabase-skills]');if(!x){x=document.createElement('p');x.dataset.supabaseSkills='true';x.className='text-sm font-semibold text-suBlue mt-4';document.querySelector('#about .lg\\:col-span-2')?.appendChild(x);}if(x)x.textContent='Skills: '+about.skills.join(' · ');}
@@ -2342,7 +2366,6 @@
           </div>
         `;
       }).join('');
-        }
       }
     }
     if(Array.isArray(d.projects)){const grid=document.querySelector('#projects .grid');if(grid){if(!d.projects.length){grid.innerHTML='<div class="col-span-full py-12 text-center text-gray-400 font-medium bg-white rounded-xl border border-dashed border-gray-300">No custom projects currently listed. Add your projects via the Admin Dashboard.</div>';}else{grid.innerHTML=d.projects.map(x=>`<article class="bg-white border border-gray-200 rounded shadow-sm overflow-hidden academic-card flex flex-col"><div class="h-40 bg-gray-100 flex items-center justify-center p-4 border-b border-gray-200">${url(x.image)?`<img src="${esc(url(x.image))}" alt="${esc(x.title)}" class="h-full max-w-full object-contain" onerror="this.style.display='none'; const f=this.parentElement.querySelector('.certificate-image-fallback'); if(f) f.style.display='block'; else { const n=document.createElement('div'); n.className='certificate-image-fallback'; n.style.display='block'; n.innerHTML='<strong>Certificate preview unavailable</strong>Please verify the image filename in Supabase Storage.'; this.parentElement.appendChild(n); }" >`:'<span class="text-gray-400 text-sm">Project</span>'}</div><div class="p-6 flex-1 flex flex-col"><h3 class="font-bold text-lg text-suBlue mb-2">${esc(x.title||'Project')}</h3><p class="text-sm text-gray-600 mb-4 flex-1">${esc(x.description||'')}</p>${arr(x.tech).length?`<p class="text-xs text-suBlue font-semibold mb-3">${arr(x.tech).map(esc).join(' · ')}</p>`:''}${url(x.link)?`<a class="text-sm font-bold text-suBlue mt-auto" href="${esc(url(x.link))}" target="_blank" rel="noopener noreferrer">View project ↗</a>`:''}</div></article>`).join('');}}}
@@ -2397,14 +2420,16 @@
     const notice=d.notices||d.notice;
     if(notice){
       const ticker=document.getElementById('notice-marquee');
-      const noticeItems=Array.isArray(notice)?notice: [notice];
-      const text=noticeItems.map(item=>typeof item==='string'?item:(item?.text||item?.title||'')).map(v=>String(v).trim()).filter(Boolean).join('  •  ');
-      if(ticker&&text)ticker.textContent=text;
+      const noticeItems=Array.isArray(notice)?notice:[notice];
+      const validItems=noticeItems.map(item=>typeof item==='string'?item:(item?.text||item?.title||'')).map(v=>String(v).trim()).filter(Boolean);
+      if(ticker&&validItems.length){
+        ticker.innerHTML=validItems.map(itemText=>`<span class="mr-12 inline-flex items-center"><span class="bg-red-600 text-white text-xs px-2 py-0.5 rounded font-bold mr-2">UPDATE</span><span class="text-gray-800 font-medium">${esc(itemText)}</span></span>`).join('');
+      }
     }
     const settings=d.site_settings;if(settings&&typeof settings==='object'){
       if(settings.name)document.querySelectorAll('.header-identity h1,#home .hero-content h1').forEach(x=>x.textContent=settings.name);
       if(settings.role){const x=document.querySelector('.header-identity p');if(x)x.textContent=settings.role;}
-      if(settings.university){const x=document.querySelector('.header-identity p:last-child');if(x)x.textContent=settings.university;}
+      if(settings.university){const x=document.getElementById('header-university')||document.querySelector('.header-identity .header-university')||document.querySelector('.header-identity p:last-child');if(x){const s=x.querySelector('span');if(s)s.textContent=settings.university;else x.textContent=settings.university;}}
       if(settings.heroTitle){const x=document.querySelector('#home .hero-content h2');if(x)x.textContent=settings.heroTitle;}
       if(settings.heroDescription){const x=document.querySelector('#home .hero-content p');if(x)x.textContent=settings.heroDescription;}
       const blue=v=>/^#[0-9a-f]{6}$/i.test(v||'')?v:'';const b=blue(settings.primaryColor),o=blue(settings.accentColor);
