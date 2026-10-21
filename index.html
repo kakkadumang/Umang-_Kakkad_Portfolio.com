@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Umang Kakkad | Official Academic Portfolio</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:wght@400;700;900&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
@@ -1686,63 +1687,62 @@
             }
         });
 
-        // Dynamic Notice Board Logic
+        // Dynamic Notice Board Logic — Connected to Live Database
         let notices = [];
         try {
             const allStore = JSON.parse(localStorage.getItem('uk_portfolio_content_all') || '{}');
             if (Array.isArray(allStore.notices) && allStore.notices.length) {
                 notices = allStore.notices.map(n => typeof n === 'string' ? { type: 'UPDATE', text: n } : { type: n.type || 'UPDATE', text: n.text || '' });
-            } else {
-                const legacy = JSON.parse(localStorage.getItem('umang_notices_v2') || '[]');
-                if (Array.isArray(legacy) && legacy.length) notices = legacy;
             }
         } catch (_) {}
 
-        if (!notices.length) {
-            notices = [
-                { type: 'NEW', text: 'PORTFOLIO REDESIGN — Welcome to my newly launched academic portfolio featuring an upgraded UI, professional gallery, and complete technical details.' },
-                { type: 'INFO', text: 'ISRO AI/ML Course — Currently pursuing a 5-Day Artificial Intelligence & Machine Learning Course by ISRO / IIRS.' },
-                { type: 'UPDATE', text: 'Android Performance Optimization is currently in progress for mobile platforms.' }
-            ];
-        }
-
-        function renderNotices() {
+        function renderNotices(customList) {
+            if (Array.isArray(customList) && customList.length) notices = customList;
             const marquee = document.getElementById('notice-marquee');
             const list = document.getElementById('notice-list');
             if (!marquee) return;
+            if (!notices.length) return;
             
-            // Render marquee
+            // Render marquee ticker
             marquee.innerHTML = notices.map(n => 
-                `<span class="mr-12 inline-flex items-center"><span class="bg-red-600 text-white text-xs px-2 py-0.5 rounded font-bold mr-2">${n.type}</span><span class="text-gray-800 font-medium">${n.text}</span></span>`
+                `<span class="mr-12 inline-flex items-center"><span class="bg-red-600 text-white text-xs px-2 py-0.5 rounded font-bold mr-2">${n.type || 'UPDATE'}</span><span class="text-gray-800 font-medium">${String(n.text || n || '').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}</span></span>`
             ).join('');
 
-            // Render admin list
+            // Render admin list if open
             if (list) {
                 list.innerHTML = notices.map((n, index) => 
                     `<li class="flex justify-between items-start gap-2 bg-gray-50 p-2 border border-gray-200 rounded">
-                        <span class="flex-1"><strong class="text-red-600 text-[10px] mr-1">[${n.type}]</strong> <span class="text-gray-700">${n.text}</span></span>
+                        <span class="flex-1"><strong class="text-red-600 text-[10px] mr-1">[${n.type || 'UPDATE'}]</strong> <span class="text-gray-700">${String(n.text || n || '')}</span></span>
                         <button onclick="deleteNotice(${index})" class="text-red-500 hover:text-red-700 text-xs font-bold px-2">&times;</button>
                     </li>`
                 ).join('');
             }
-
-            // Save to localStorage
-            try { localStorage.setItem('umang_notices_v2', JSON.stringify(notices)); } catch (_) {}
         }
 
         function toggleNoticeModal() {
             const modal = document.getElementById('notice-modal');
-            modal.classList.toggle('active');
+            if (modal) modal.classList.toggle('active');
         }
 
-        document.getElementById('add-notice-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const type = document.getElementById('notice-type').value;
-            const text = document.getElementById('notice-text').value;
-            notices.unshift({ type, text }); // Add to beginning
-            document.getElementById('notice-text').value = '';
+        const addNoticeForm = document.getElementById('add-notice-form');
+        if (addNoticeForm) {
+            addNoticeForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const type = document.getElementById('notice-type').value;
+                const text = document.getElementById('notice-text').value;
+                notices.unshift({ type, text });
+                document.getElementById('notice-text').value = '';
+                renderNotices();
+            });
+        }
+
+        function deleteNotice(index) {
+            notices.splice(index, 1);
             renderNotices();
-        });
+        }
+
+        if (notices.length) renderNotices();
+});
 
         function deleteNotice(index) {
             notices.splice(index, 1);
@@ -2190,70 +2190,189 @@
 
 
 
-<!-- Supabase dynamic portfolio reader. Uses the same project and public publishable key as visitor tracking. -->
+<!-- Supabase dynamic portfolio reader — Live Cloud Database Synchronizer -->
 <script>
-(async function(){
+window.loadAndRenderPortfolio = async function(isRealtime = false) {
   const SUPABASE_URL = 'https://rxbggmwzgbshmpjareav.supabase.co';
   const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_ptDO2uplwLjlJ2i-KCvkmA_1rcvyeGY';
-  if(!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY){console.warn('Configure Supabase URL and Publishable key in index.html.');return;}
-  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const arr=v=>Array.isArray(v)?v:(v?[v]:[]);
-  const url=v=>{v=String(v||'').trim();return /^(https?:\/\/|\/|data:image\/|blob:|assets\/|images\/|files\/|\.\.?\/)/i.test(v)?v:''};
-  try{
+  if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+    console.warn('Supabase URL or Publishable key missing.');
+    return;
+  }
+
+  const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const arr = v => Array.isArray(v) ? v : (v ? [v] : []);
+  const url = v => {
+    v = String(v || '').trim();
+    if (!v) return '';
+    if (/^(https?:\/\/|\/|data:image\/|blob:|assets\/|images\/|files\/|\.\.?\/)/i.test(v)) return v;
+    if (/\.(jpe?g|png|gif|svg|webp|ico|pdf)$/i.test(v)) {
+      return 'assets/images/' + v;
+    }
+    return v;
+  };
+
+  try {
     let d = {};
-    // Check local storage sync first
+
+    // 1. Check local storage cache for instant render
     try {
       const localStore = JSON.parse(localStorage.getItem('uk_portfolio_content_all') || '{}');
       if (localStore && typeof localStore === 'object') Object.assign(d, localStore);
     } catch (_) {}
 
-    // Fetch live data from Supabase
+    // 2. Fetch live data from Supabase Cloud Database with cache-busting timestamp
     try {
-      const r=await fetch(SUPABASE_URL.replace(/\/$/,'')+'/rest/v1/portfolio_content?select=section,content',{headers:{apikey:SUPABASE_PUBLISHABLE_KEY,Authorization:'Bearer '+SUPABASE_PUBLISHABLE_KEY,Accept:'application/json'},cache:'no-store'});
+      const fetchUrl = `${SUPABASE_URL.replace(/\/$/, '')}/rest/v1/portfolio_content?select=section,content,updated_at&_cb=${Date.now()}`;
+      const r = await fetch(fetchUrl, {
+        headers: {
+          apikey: SUPABASE_PUBLISHABLE_KEY,
+          Authorization: 'Bearer ' + SUPABASE_PUBLISHABLE_KEY,
+          Accept: 'application/json'
+        },
+        cache: 'no-store'
+      });
       if (r.ok) {
-        const rows=await r.json();
+        const rows = await r.json();
         rows.forEach(x => { d[x.section] = x.content; });
+        try { localStorage.setItem('uk_portfolio_content_all', JSON.stringify(d)); } catch (_) {}
       }
-    } catch (_) {}
-    const about=d.about;
-    if(about && !Array.isArray(about)){
-      if(about.name){document.querySelectorAll('.header-identity h1,#home .hero-content h1').forEach(x=>x.textContent=about.name);}
-      if(about.role){const x=document.querySelector('.header-identity p');if(x)x.textContent=about.role;const y=document.querySelector('#about .bg-suGray li:first-child span');if(y)y.textContent=about.role;}
-      if(about.university){const x=document.getElementById('header-university')||document.querySelector('.header-identity .header-university')||document.querySelector('.header-identity p:last-child');if(x){const s=x.querySelector('span');if(s)s.textContent=about.university;else x.textContent=about.university;}const y=document.querySelector('#about .bg-suGray li:nth-child(2) span');if(y)y.textContent=about.university;}
-      if(about.title){const x=document.querySelector('#about h2');if(x)x.textContent=about.title;}
-      if(about.description){const x=document.querySelector('#about .lg\\:col-span-2 p');if(x)x.textContent=about.description;const h=document.querySelector('#home .hero-content p');if(h)h.textContent=about.description;}
-      if(Array.isArray(about.skills)){let x=document.querySelector('#about [data-supabase-skills]');if(!x){x=document.createElement('p');x.dataset.supabaseSkills='true';x.className='text-sm font-semibold text-suBlue mt-4';document.querySelector('#about .lg\\:col-span-2')?.appendChild(x);}if(x)x.textContent='Skills: '+about.skills.join(' · ');}
-      if(url(about.image))document.querySelectorAll('#profile-open-btn img.header-profile,#profile-modal img.profile-large-photo').forEach(x=>{x.src=url(about.image);x.style.display='';});
+    } catch (fetchErr) {
+      console.warn('Database fetch fallback to cache:', fetchErr);
     }
-    if(Array.isArray(d.education)){
-      const sec=document.getElementById('education');
-      const host=sec?.querySelector('.space-y-8');
-      if(host){
-        if(!d.education.length){
-          host.innerHTML='<div class="py-12 text-center text-gray-400 font-medium bg-white rounded-xl border border-dashed border-gray-300">No education records listed. Add your degrees via the Admin Dashboard.</div>';
-        } else {
-          host.innerHTML=d.education.map(x=>{
-        const isBCA = (x.title||'').toLowerCase().includes('bca') || (x.title||'').toLowerCase().includes('bachelor');
-        const badge = isBCA 
-          ? '<span class="bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded uppercase tracking-wider border border-green-200">Graduation Completed</span>'
-          : '<span class="bg-blue-100 text-suBlue text-xs font-bold px-3 py-1 rounded uppercase tracking-wider border border-blue-200">Currently Pursuing</span>';
-        const borderColor = isBCA ? 'border-suOrange' : 'border-suBlue';
-        const iconBg = isBCA ? 'bg-orange-50 text-suOrange border-orange-200' : 'bg-blue-50 text-suBlue border-blue-200';
-        const subtitleColor = isBCA ? 'text-suBlue' : 'text-suOrange';
-        const imgUrl = url(x.image);
 
-        return `<article class="bg-white border-l-4 ${borderColor} p-6 lg:p-8 rounded shadow-sm academic-card flex flex-col lg:flex-row gap-8 items-start">
-          <div class="${iconBg} p-4 rounded-full flex-shrink-0 hidden md:block border">
-            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 14l9-5-9-5-9 5 9 5z"></path></svg>
-          </div>
-          <div class="flex-1">
-            <div class="flex justify-between items-start flex-wrap gap-2 mb-2">
-              <h3 class="text-2xl font-bold text-gray-800 serif-heading">${esc(x.title||'Academic qualification')}</h3>
-              ${badge}
-            </div>
-            ${x.date?`<p class="text-lg ${subtitleColor} font-semibold mb-4">${esc(x.date)}</p>`:''}
-            <p class="text-gray-600 mb-6 leading-relaxed">${esc(x.description||'')}</p>
-            ${imgUrl ? `
+    // 3. Render Site Settings (Theme & Global Identity)
+    const settings = d.site_settings;
+    if (settings && typeof settings === 'object') {
+      if (settings.name) document.querySelectorAll('.header-identity h1, #home .hero-content h1').forEach(x => x.textContent = settings.name);
+      if (settings.role) {
+        const x = document.querySelector('.header-identity p');
+        if (x) x.textContent = settings.role;
+      }
+      if (settings.university) {
+        const x = document.getElementById('header-university') || document.querySelector('.header-identity .header-university') || document.querySelector('.header-identity p:last-child');
+        if (x) {
+          const s = x.querySelector('span');
+          if (s) s.textContent = settings.university;
+          else x.textContent = settings.university;
+        }
+      }
+      if (settings.heroTitle) {
+        const x = document.querySelector('#home .hero-content h2');
+        if (x) x.textContent = settings.heroTitle;
+      }
+      if (settings.heroDescription) {
+        const x = document.querySelector('#home .hero-content p');
+        if (x) x.textContent = settings.heroDescription;
+      }
+      const blue = v => /^#[0-9a-f]{6}$/i.test(v || '') ? v : '';
+      const b = blue(settings.primaryColor), o = blue(settings.accentColor);
+      if (b) document.querySelectorAll('.bg-suBlue, .text-suBlue, .border-suBlue').forEach(x => {
+        if (x.classList.contains('bg-suBlue')) x.style.backgroundColor = b;
+        if (x.classList.contains('text-suBlue')) x.style.color = b;
+        if (x.classList.contains('border-suBlue')) x.style.borderColor = b;
+      });
+      if (o) document.querySelectorAll('.bg-suOrange, .text-suOrange, .border-suOrange').forEach(x => {
+        if (x.classList.contains('bg-suOrange')) x.style.backgroundColor = o;
+        if (x.classList.contains('text-suOrange')) x.style.color = o;
+        if (x.classList.contains('border-suOrange')) x.style.borderColor = o;
+      });
+    }
+
+    // 4. Render About Me Section
+    const about = d.about;
+    if (about && !Array.isArray(about)) {
+      if (about.name) document.querySelectorAll('.header-identity h1, #home .hero-content h1').forEach(x => x.textContent = about.name);
+      if (about.role) {
+        const x = document.querySelector('.header-identity p');
+        if (x) x.textContent = about.role;
+        const y = document.querySelector('#about .bg-suGray li:first-child span');
+        if (y) y.textContent = about.role;
+      }
+      if (about.university) {
+        const x = document.getElementById('header-university') || document.querySelector('.header-identity .header-university') || document.querySelector('.header-identity p:last-child');
+        if (x) {
+          const s = x.querySelector('span');
+          if (s) s.textContent = about.university;
+          else x.textContent = about.university;
+        }
+        const y = document.querySelector('#about .bg-suGray li:nth-child(2) span');
+        if (y) y.textContent = about.university;
+      }
+      if (about.title) {
+        const x = document.querySelector('#about h2');
+        if (x) x.textContent = about.title;
+      }
+      if (about.description) {
+        const descContainer = document.querySelector('#about .lg\:col-span-2');
+        if (descContainer) {
+          const paragraphs = String(about.description).split(/\n+/).map(p => p.trim()).filter(Boolean);
+          if (paragraphs.length) {
+            descContainer.innerHTML = paragraphs.map((p, idx) => {
+              const cls = idx === 0 ? 'text-lg font-medium text-suBlue mb-4' : 'text-gray-700 leading-relaxed mb-4';
+              return `<p class="${cls}">${esc(p)}</p>`;
+            }).join('');
+          }
+        }
+        const h = document.querySelector('#home .hero-content p');
+        if (h && !settings?.heroDescription) h.textContent = about.description;
+      }
+      if (Array.isArray(about.skills) && about.skills.length) {
+        let x = document.querySelector('#about [data-supabase-skills]');
+        if (!x) {
+          x = document.createElement('p');
+          x.dataset.supabaseSkills = 'true';
+          x.className = 'text-sm font-semibold text-suBlue mt-4 border-t border-gray-200 pt-3';
+          document.querySelector('#about .lg\:col-span-2')?.appendChild(x);
+        }
+        if (x) x.textContent = 'Skills: ' + about.skills.join(' · ');
+      }
+      if (url(about.image)) {
+        document.querySelectorAll('#profile-open-btn img.header-profile, #profile-modal img.profile-large-photo').forEach(x => {
+          x.src = url(about.image);
+          x.style.display = '';
+        });
+      }
+    }
+
+    // 5. Render Education Section (MCA + BCA Provisional Degree Certificate)
+    if (Array.isArray(d.education)) {
+      const sec = document.getElementById('education');
+      const host = sec?.querySelector('.space-y-8');
+      if (host) {
+        if (!d.education.length) {
+          host.innerHTML = '<div class="py-12 text-center text-gray-400 font-medium bg-white rounded-xl border border-dashed border-gray-300">No education records listed. Add your degrees via the Admin Dashboard.</div>';
+        } else {
+          host.innerHTML = d.education.map(x => {
+            const isBCA = (x.title || '').toLowerCase().includes('bca') || (x.title || '').toLowerCase().includes('bachelor');
+            const badge = isBCA 
+              ? '<span class="bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded uppercase tracking-wider border border-green-200">Graduation Completed</span>'
+              : '<span class="bg-blue-100 text-suBlue text-xs font-bold px-3 py-1 rounded uppercase tracking-wider border border-blue-200">Currently Pursuing</span>';
+            const borderColor = isBCA ? 'border-suOrange' : 'border-suBlue';
+            const iconBg = isBCA ? 'bg-orange-50 text-suOrange border-orange-200' : 'bg-blue-50 text-suBlue border-blue-200';
+            const subtitleColor = isBCA ? 'text-suBlue' : 'text-suOrange';
+            
+            let imgUrl = url(x.image);
+            if (isBCA && !imgUrl) {
+              imgUrl = 'assets/images/bca-provisional-degree.jpeg';
+            }
+
+            const courseworkHtml = !isBCA ? `
+              <div class="bg-gray-50 border border-gray-200 rounded p-4 mt-4">
+                <h4 class="text-sm font-bold text-gray-700 uppercase mb-3 border-b pb-2 flex items-center gap-2">
+                  <svg class="w-4 h-4 text-suBlue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                  Key Coursework
+                </h4>
+                <div class="flex flex-wrap gap-2">
+                  <span class="bg-white border border-gray-200 text-gray-700 text-xs px-3 py-1 rounded shadow-sm">Object-Oriented Programming</span>
+                  <span class="bg-white border border-gray-200 text-gray-700 text-xs px-3 py-1 rounded shadow-sm">Database Management Systems</span>
+                  <span class="bg-white border border-gray-200 text-gray-700 text-xs px-3 py-1 rounded shadow-sm">Web Technologies</span>
+                  <span class="bg-white border border-gray-200 text-gray-700 text-xs px-3 py-1 rounded shadow-sm">Python & Machine Learning</span>
+                </div>
+              </div>
+            ` : '';
+
+            const certHtml = imgUrl ? `
               <div class="mt-6 border-t pt-5">
                 <h4 class="text-sm font-bold text-gray-700 uppercase mb-3 flex items-center gap-2">
                   <svg class="w-5 h-5 text-suOrange" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg> 
@@ -2266,18 +2385,52 @@
                   </div>
                 </div>
               </div>
-            ` : ''}
-          </div>
-        </article>`;
-      }).join('');
+            ` : '';
+
+            return `<article class="bg-white border-l-4 ${borderColor} p-6 lg:p-8 rounded shadow-sm academic-card flex flex-col lg:flex-row gap-8 items-start">
+              <div class="${iconBg} p-4 rounded-full flex-shrink-0 hidden md:block border">
+                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 14l9-5-9-5-9 5 9 5z"></path></svg>
+              </div>
+              <div class="flex-1">
+                <div class="flex justify-between items-start flex-wrap gap-2 mb-2">
+                  <h3 class="text-2xl font-bold text-gray-800 serif-heading">${esc(x.title || 'Academic qualification')}</h3>
+                  ${badge}
+                </div>
+                ${x.date ? `<p class="text-lg ${subtitleColor} font-semibold mb-4">${esc(x.date)}</p>` : ''}
+                <p class="text-gray-600 mb-4 leading-relaxed">${esc(x.description || '')}</p>
+                ${courseworkHtml}
+                ${certHtml}
+              </div>
+            </article>`;
+          }).join('');
         }
       }
     }
-    if(Array.isArray(d.skills)){const sec=document.getElementById('skills');const grid=sec?.querySelector('.grid');if(grid){if(!d.skills.length){grid.innerHTML='<div class="col-span-full py-12 text-center text-gray-400 font-medium bg-white rounded-xl border border-dashed border-gray-300">No custom skills listed. Manage via Admin Dashboard.</div>';}else{grid.innerHTML=d.skills.map(x=>`<article class="bg-white border border-gray-200 rounded shadow-sm p-6 academic-card border-t-4 border-suBlue"><h3 class="text-lg font-bold text-suBlue mb-2">${esc(x.title||'Skills')}</h3>${x.date?`<p class="text-xs text-gray-500 mb-2">${esc(x.date)}</p>`:''}<p class="text-gray-700 text-sm leading-relaxed">${esc(x.description||'')}</p></article>`).join('');}}}
-    if(Array.isArray(d.experience)){
-      const sec=document.getElementById('experience');
-      const host=sec?.querySelector('.max-w-7xl > .grid') || sec?.querySelector('.grid');
-      if(host){
+
+    // 6. Render Skills Section
+    if (Array.isArray(d.skills)) {
+      const sec = document.getElementById('skills');
+      const grid = sec?.querySelector('.grid');
+      if (grid) {
+        if (!d.skills.length) {
+          grid.innerHTML = '<div class="col-span-full py-12 text-center text-gray-400 font-medium bg-white rounded-xl border border-dashed border-gray-300">No custom skills listed. Manage via Admin Dashboard.</div>';
+        } else {
+          grid.innerHTML = d.skills.map(x => `
+            <article class="bg-white border border-gray-200 rounded shadow-sm p-6 academic-card border-t-4 border-suBlue">
+              <h3 class="text-lg font-bold text-suBlue mb-2">${esc(x.title || 'Skills')}</h3>
+              ${x.date ? `<p class="text-xs text-gray-500 mb-2 font-semibold">${esc(x.date)}</p>` : ''}
+              <p class="text-gray-700 text-sm leading-relaxed">${esc(x.description || '')}</p>
+            </article>
+          `).join('');
+        }
+      }
+    }
+
+    // 7. Render Experience Section (Internships + INFLIBNET 4 Photos)
+    if (Array.isArray(d.experience)) {
+      const sec = document.getElementById('experience');
+      const host = sec?.querySelector('.max-w-7xl > .grid') || sec?.querySelector('.grid');
+      if (host) {
         const defaultExp = [
           {
             title: "IT / Software Development",
@@ -2300,80 +2453,134 @@
           }
         ];
         const expList = (d.experience && d.experience.length > 0) ? d.experience : defaultExp;
-        host.innerHTML=expList.map(x=>{
-        const isVisit = (x.title||'').toLowerCase().includes('inflibnet') || (x.title||'').toLowerCase().includes('visit');
-        const badgeText = isVisit ? 'Academic Visit' : 'Industry Internship / Experience';
-        const headerBg = isVisit ? 'bg-suOrange text-white' : 'bg-suBlue text-white';
-        const badgeColor = isVisit ? 'text-suBlue' : 'text-suOrange';
+        host.innerHTML = expList.map(x => {
+          const isVisit = (x.title || '').toLowerCase().includes('inflibnet') || (x.title || '').toLowerCase().includes('visit');
+          const badgeText = isVisit ? 'Academic Visit' : 'Industry Internship / Experience';
+          const headerBg = isVisit ? 'bg-suOrange text-white' : 'bg-suBlue text-white';
+          const badgeColor = isVisit ? 'text-suBlue' : 'text-suOrange';
 
-        const inflibnet4Photos = [
-          'assets/images/inflibnet-visit-1.jpeg',
-          'assets/images/inflibnet-visit-2.jpeg',
-          'assets/images/inflibnet-visit-3.jpeg',
-          'assets/images/inflibnet-visit-4.jpeg'
-        ];
+          const inflibnet4Photos = [
+            'assets/images/inflibnet-visit-1.jpeg',
+            'assets/images/inflibnet-visit-2.jpeg',
+            'assets/images/inflibnet-visit-3.jpeg',
+            'assets/images/inflibnet-visit-4.jpeg'
+          ];
 
-        let visitImgs = [];
-        if(Array.isArray(x.images) && x.images.length >= 2){
-          visitImgs = x.images.map(url).filter(Boolean);
-        } else if(isVisit){
-          visitImgs = inflibnet4Photos;
-        } else if(Array.isArray(x.images) && x.images.length === 1){
-          visitImgs = [url(x.images[0])].filter(Boolean);
-        } else if(url(x.image)){
-          visitImgs = [url(x.image)];
-        }
+          let visitImgs = [];
+          if (Array.isArray(x.images) && x.images.length >= 2) {
+            visitImgs = x.images.map(url).filter(Boolean);
+          } else if (isVisit) {
+            visitImgs = inflibnet4Photos;
+          } else if (Array.isArray(x.images) && x.images.length === 1) {
+            visitImgs = [url(x.images[0])].filter(Boolean);
+          } else if (url(x.image)) {
+            visitImgs = [url(x.image)];
+          }
 
-        let galleryHtml = '';
-        if(visitImgs.length > 1){
-          galleryHtml = `
-            <div class="mt-4 border-t pt-4">
-              <h4 class="text-xs font-bold text-gray-600 uppercase mb-3 text-center tracking-widest flex items-center justify-center gap-1.5">
-                <svg class="w-4 h-4 text-suOrange" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                Visit & Experience Gallery · ${visitImgs.length} Photos
-              </h4>
-              <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                ${visitImgs.map((im, idx)=>`
-                  <a class="block rounded-lg border border-gray-300 bg-gray-50 p-1 shadow-sm hover:shadow-md hover:border-suOrange transition group" href="${esc(im)}" target="_blank" rel="noopener noreferrer" aria-label="Open visit photo ${idx+1}">
-                    <img src="${esc(im)}" class="w-full h-24 object-cover rounded group-hover:opacity-90 transition" alt="${esc(x.title)} photo ${idx+1}" loading="lazy">
-                    <span class="block text-center text-[10px] text-gray-500 font-semibold mt-1">Photo ${idx+1}</span>
-                  </a>
-                `).join('')}
+          let galleryHtml = '';
+          if (visitImgs.length > 1) {
+            galleryHtml = `
+              <div class="mt-4 border-t pt-4">
+                <h4 class="text-xs font-bold text-gray-600 uppercase mb-3 text-center tracking-widest flex items-center justify-center gap-1.5">
+                  <svg class="w-4 h-4 text-suOrange" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                  Visit & Experience Gallery · ${visitImgs.length} Photos
+                </h4>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  ${visitImgs.map((im, idx) => `
+                    <a class="block rounded-lg border border-gray-300 bg-gray-50 p-1 shadow-sm hover:shadow-md hover:border-suOrange transition group" href="${esc(im)}" target="_blank" rel="noopener noreferrer" aria-label="Open visit photo ${idx + 1}">
+                      <img src="${esc(im)}" class="w-full h-24 object-cover rounded group-hover:opacity-90 transition" alt="${esc(x.title)} photo ${idx + 1}" loading="lazy">
+                      <span class="block text-center text-[10px] text-gray-500 font-semibold mt-1">Photo ${idx + 1}</span>
+                    </a>
+                  `).join('')}
+                </div>
+              </div>
+            `;
+          } else if (visitImgs.length === 1) {
+            galleryHtml = `
+              <div class="mt-4 border-t pt-4">
+                <a class="block rounded-lg border border-gray-300 bg-gray-50 p-1 shadow-sm hover:shadow-md transition" href="${esc(visitImgs[0])}" target="_blank" rel="noopener noreferrer">
+                  <img src="${esc(visitImgs[0])}" class="w-full max-h-56 object-contain rounded" alt="${esc(x.title)}" loading="lazy">
+                </a>
+              </div>
+            `;
+          }
+
+          return `
+            <div class="bg-white border border-gray-200 rounded shadow-sm overflow-hidden academic-card">
+              <div class="${headerBg} p-4">
+                <span class="text-xs font-bold uppercase tracking-wider ${badgeColor}">${badgeText}</span>
+                <h3 class="text-xl font-bold mt-1 serif-heading">${esc(x.title || 'Experience')}</h3>
+              </div>
+              <div class="p-6">
+                ${x.date ? `<p class="font-bold text-gray-800 mb-1">${esc(x.date)}</p>` : ''}
+                <p class="text-gray-700 text-sm leading-relaxed mb-4">${esc(x.description || '')}</p>
+                ${galleryHtml}
               </div>
             </div>
           `;
-        } else if(visitImgs.length === 1){
-          galleryHtml = `
-            <div class="mt-4 border-t pt-4">
-              <a class="block rounded-lg border border-gray-300 bg-gray-50 p-1 shadow-sm hover:shadow-md transition" href="${esc(visitImgs[0])}" target="_blank" rel="noopener noreferrer">
-                <img src="${esc(visitImgs[0])}" class="w-full max-h-56 object-contain rounded" alt="${esc(x.title)}" loading="lazy">
-              </a>
-            </div>
-          `;
-        }
-
-        return `
-          <div class="bg-white border border-gray-200 rounded shadow-sm overflow-hidden academic-card">
-            <div class="${headerBg} p-4">
-              <span class="text-xs font-bold uppercase tracking-wider ${badgeColor}">${badgeText}</span>
-              <h3 class="text-xl font-bold mt-1 serif-heading">${esc(x.title||'Experience')}</h3>
-            </div>
-            <div class="p-6">
-              ${x.date?`<p class="font-bold text-gray-800 mb-1">${esc(x.date)}</p>`:''}
-              <p class="text-gray-700 text-sm leading-relaxed mb-4">${esc(x.description||'')}</p>
-              ${galleryHtml}
-            </div>
-          </div>
-        `;
-      }).join('');
+        }).join('');
       }
     }
-    if(Array.isArray(d.projects)){const grid=document.querySelector('#projects .grid');if(grid){if(!d.projects.length){grid.innerHTML='<div class="col-span-full py-12 text-center text-gray-400 font-medium bg-white rounded-xl border border-dashed border-gray-300">No custom projects currently listed. Add your projects via the Admin Dashboard.</div>';}else{grid.innerHTML=d.projects.map(x=>`<article class="bg-white border border-gray-200 rounded shadow-sm overflow-hidden academic-card flex flex-col"><div class="h-40 bg-gray-100 flex items-center justify-center p-4 border-b border-gray-200">${url(x.image)?`<img src="${esc(url(x.image))}" alt="${esc(x.title)}" class="h-full max-w-full object-contain" onerror="this.style.display='none'; const f=this.parentElement.querySelector('.certificate-image-fallback'); if(f) f.style.display='block'; else { const n=document.createElement('div'); n.className='certificate-image-fallback'; n.style.display='block'; n.innerHTML='<strong>Certificate preview unavailable</strong>Please verify the image filename in Supabase Storage.'; this.parentElement.appendChild(n); }" >`:'<span class="text-gray-400 text-sm">Project</span>'}</div><div class="p-6 flex-1 flex flex-col"><h3 class="font-bold text-lg text-suBlue mb-2">${esc(x.title||'Project')}</h3><p class="text-sm text-gray-600 mb-4 flex-1">${esc(x.description||'')}</p>${arr(x.tech).length?`<p class="text-xs text-suBlue font-semibold mb-3">${arr(x.tech).map(esc).join(' · ')}</p>`:''}${url(x.link)?`<a class="text-sm font-bold text-suBlue mt-auto" href="${esc(url(x.link))}" target="_blank" rel="noopener noreferrer">View project ↗</a>`:''}</div></article>`).join('');}}}
-    if(Array.isArray(d.certificates)){const grid=document.querySelector('#certificates .grid');if(grid){if(!d.certificates.length){grid.innerHTML='<div class="col-span-full py-12 text-center text-gray-400 font-medium bg-white rounded-xl border border-dashed border-gray-300">No certificates currently listed. Upload via the Admin Dashboard.</div>';}else{grid.innerHTML=d.certificates.map(x=>`<article class="bg-suGray p-4 border border-gray-200 shadow-sm rounded academic-card text-center border-t-4 border-suBlue"><div class="certificate-image-frame mb-4">${url(x.image)?`<img src="${esc(url(x.image))}" alt="${esc(x.title||'Certificate')}" class="max-h-full max-w-full object-contain cursor-pointer" onclick="window.open(this.src,'_blank','noopener,noreferrer')" onerror="this.style.display='none'; const f=this.parentElement.querySelector('.certificate-image-fallback'); if(f) f.style.display='block'; else { const n=document.createElement('div'); n.className='certificate-image-fallback'; n.style.display='block'; n.innerHTML='<strong>Certificate preview unavailable</strong>Please verify the image filename in Supabase Storage.'; this.parentElement.appendChild(n); }" >`:'<span class="text-sm text-gray-400">No image uploaded</span>'}</div><h3 class="font-bold text-gray-800">${esc(x.title||'Certificate')}</h3>${x.date?`<p class="text-xs text-gray-500 mt-1">${esc(x.date)}</p>`:''}</article>`).join('');}}}
-    if(Array.isArray(d.events)){
-      const sec=document.getElementById('events');
-      const grid=sec?.querySelector('.max-w-7xl > .grid') || sec?.querySelector('.grid');
-      if(grid){
+
+    // 8. Render Projects Section
+    if (Array.isArray(d.projects)) {
+      const grid = document.querySelector('#projects .grid');
+      if (grid) {
+        if (!d.projects.length) {
+          grid.innerHTML = '<div class="col-span-full py-12 text-center text-gray-400 font-medium bg-white rounded-xl border border-dashed border-gray-300">No custom projects currently listed. Add your projects via the Admin Dashboard.</div>';
+        } else {
+          grid.innerHTML = d.projects.map(x => `
+            <article class="bg-white border border-gray-200 rounded shadow-sm overflow-hidden academic-card flex flex-col">
+              <div class="h-40 bg-gray-100 flex items-center justify-center p-4 border-b border-gray-200">
+                ${url(x.image) ? `<img src="${esc(url(x.image))}" alt="${esc(x.title)}" class="h-full max-w-full object-contain" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                  <div class="hidden h-full w-full items-center justify-center text-gray-400 font-semibold text-sm">
+                    <svg class="w-8 h-8 text-suBlue/50 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                    ${esc(x.title || 'Project')}
+                  </div>` : `
+                  <div class="h-full w-full flex items-center justify-center text-gray-400 font-semibold text-sm">
+                    <svg class="w-8 h-8 text-suBlue/50 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                    ${esc(x.title || 'Project')}
+                  </div>`
+                }
+              </div>
+              <div class="p-6 flex-1 flex flex-col">
+                <h3 class="font-bold text-lg text-suBlue mb-2">${esc(x.title || 'Project')}</h3>
+                <p class="text-sm text-gray-600 mb-4 flex-1">${esc(x.description || '')}</p>
+                ${arr(x.tech).length ? `<p class="text-xs text-suBlue font-semibold mb-3">${arr(x.tech).map(esc).join(' · ')}</p>` : ''}
+                ${url(x.link) ? `<a class="text-sm font-bold text-suBlue mt-auto flex items-center gap-1 hover:text-suOrange transition" href="${esc(url(x.link))}" target="_blank" rel="noopener noreferrer">View project ↗</a>` : ''}
+              </div>
+            </article>
+          `).join('');
+        }
+      }
+    }
+
+    // 9. Render Certificates Section
+    if (Array.isArray(d.certificates)) {
+      const grid = document.querySelector('#certificates .grid');
+      if (grid) {
+        if (!d.certificates.length) {
+          grid.innerHTML = '<div class="col-span-full py-12 text-center text-gray-400 font-medium bg-white rounded-xl border border-dashed border-gray-300">No certificates currently listed. Upload via the Admin Dashboard.</div>';
+        } else {
+          grid.innerHTML = d.certificates.map(x => `
+            <article class="bg-suGray p-4 border border-gray-200 shadow-sm rounded academic-card text-center border-t-4 border-suBlue">
+              <div class="certificate-image-frame mb-4 h-48 bg-white rounded flex items-center justify-center p-2 border border-gray-100">
+                ${url(x.image) ? `<img src="${esc(url(x.image))}" alt="${esc(x.title || 'Certificate')}" class="max-h-full max-w-full object-contain cursor-pointer hover:scale-105 transition" onclick="window.open(this.src,'_blank')" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                  <div class="hidden text-xs text-gray-400 p-2">Certificate preview unavailable</div>` : `<span class="text-sm text-gray-400">Verified Credential</span>`}
+              </div>
+              <h3 class="font-bold text-gray-800">${esc(x.title || 'Certificate')}</h3>
+              ${x.date ? `<p class="text-xs text-gray-500 mt-1">${esc(x.date)}</p>` : ''}
+            </article>
+          `).join('');
+        }
+      }
+    }
+
+    // 10. Render Events & Gallery Section
+    if (Array.isArray(d.events)) {
+      const sec = document.getElementById('events');
+      const grid = sec?.querySelector('.max-w-7xl > .grid') || sec?.querySelector('.grid');
+      if (grid) {
         const defaultEvents = [
           {
             title: "Saraswati Satkar Samarambh",
@@ -2401,44 +2608,131 @@
 
         grid.innerHTML = eventList.map(x => {
           let photos = (Array.isArray(x.images) ? x.images : (x.image ? [x.image] : [])).map(url).filter(Boolean);
-          if (!photos.length && (x.title||'').toLowerCase().includes('saraswati')) {
+          if (!photos.length && (x.title || '').toLowerCase().includes('saraswati')) {
             photos = ['assets/images/satkar-samarambh-speech-1.jpg', 'assets/images/satkar-samarambh-speech-2.jpg', 'assets/images/satkar-samarambh-speech-3.jpg'];
-          } else if (!photos.length && (x.title||'').toLowerCase().includes('wordpress')) {
+          } else if (!photos.length && (x.title || '').toLowerCase().includes('wordpress')) {
             photos = ['assets/images/wordpress-event-speech-1.jpg', 'assets/images/wordpress-event-speech-2.jpg', 'assets/images/wordpress-event-speech-3.jpg'];
           }
 
           return `<article class="bg-suGray border border-gray-200 rounded shadow-sm p-6 academic-card border-t-4 border-suOrange">
-            <h3 class="text-xl font-bold text-suBlue mb-2 serif-heading">${esc(x.title||'Event')}</h3>
+            <h3 class="text-xl font-bold text-suBlue mb-2 serif-heading">${esc(x.title || 'Event')}</h3>
             ${x.date ? `<p class="text-sm text-gray-500 mb-4 border-b border-gray-300 pb-3">${esc(x.date)}</p>` : ''}
             ${x.description ? `<p class="text-gray-700 text-sm mb-6 leading-relaxed">${esc(x.description)}</p>` : ''}
-            ${photos.length ? `<div class="grid grid-cols-2 sm:grid-cols-3 gap-3">${photos.map((im,i)=>`<div class="relative group overflow-hidden rounded border border-gray-300 bg-white shadow-sm"><img src="${esc(im)}" alt="${esc(x.title||'Event')} photo ${i+1}" class="w-full h-36 object-cover cursor-pointer hover:scale-105 transition duration-300" onclick="window.open(this.src,'_blank','noopener,noreferrer')"></div>`).join('')}</div>` : ''}
+            ${photos.length ? `<div class="grid grid-cols-2 sm:grid-cols-3 gap-3">${photos.map((im, i) => `
+              <div class="relative group overflow-hidden rounded border border-gray-300 bg-white shadow-sm">
+                <img src="${esc(im)}" alt="${esc(x.title || 'Event')} photo ${i + 1}" class="w-full h-36 object-cover cursor-pointer hover:scale-105 transition duration-300" onclick="window.open(this.src,'_blank')">
+              </div>
+            `).join('')}</div>` : ''}
           </article>`;
         }).join('');
       }
     }
-    if(d.resume&&url(d.resume.url))document.querySelectorAll('a[href*="resume-placeholder"],a[href*="resume.pdf"]').forEach(a=>{a.href=url(d.resume.url);a.target='_blank';a.rel='noopener noreferrer';});
-    const notice=d.notices||d.notice;
-    if(notice){
-      const ticker=document.getElementById('notice-marquee');
-      const noticeItems=Array.isArray(notice)?notice:[notice];
-      const validItems=noticeItems.map(item=>typeof item==='string'?item:(item?.text||item?.title||'')).map(v=>String(v).trim()).filter(Boolean);
-      if(ticker&&validItems.length){
-        ticker.innerHTML=validItems.map(itemText=>`<span class="mr-12 inline-flex items-center"><span class="bg-red-600 text-white text-xs px-2 py-0.5 rounded font-bold mr-2">UPDATE</span><span class="text-gray-800 font-medium">${esc(itemText)}</span></span>`).join('');
+
+    // 11. Render Resume Link
+    if (d.resume && url(d.resume.url)) {
+      document.querySelectorAll('a[href*="resume-placeholder"], a[href*="resume.pdf"]').forEach(a => {
+        a.href = url(d.resume.url);
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+      });
+    }
+
+    // 12. Render Notice Board Marquee
+    const notice = d.notices || d.notice;
+    if (notice) {
+      const ticker = document.getElementById('notice-marquee');
+      const noticeItems = Array.isArray(notice) ? notice : [notice];
+      const validItems = noticeItems.map(item => typeof item === 'string' ? item : (item?.text || item?.title || '')).map(v => String(v).trim()).filter(Boolean);
+      if (ticker && validItems.length) {
+        ticker.innerHTML = validItems.map(itemText => 
+          `<span class="mr-12 inline-flex items-center"><span class="bg-red-600 text-white text-xs px-2 py-0.5 rounded font-bold mr-2">UPDATE</span><span class="text-gray-800 font-medium">${esc(itemText)}</span></span>`
+        ).join('');
       }
     }
-    const settings=d.site_settings;if(settings&&typeof settings==='object'){
-      if(settings.name)document.querySelectorAll('.header-identity h1,#home .hero-content h1').forEach(x=>x.textContent=settings.name);
-      if(settings.role){const x=document.querySelector('.header-identity p');if(x)x.textContent=settings.role;}
-      if(settings.university){const x=document.getElementById('header-university')||document.querySelector('.header-identity .header-university')||document.querySelector('.header-identity p:last-child');if(x){const s=x.querySelector('span');if(s)s.textContent=settings.university;else x.textContent=settings.university;}}
-      if(settings.heroTitle){const x=document.querySelector('#home .hero-content h2');if(x)x.textContent=settings.heroTitle;}
-      if(settings.heroDescription){const x=document.querySelector('#home .hero-content p');if(x)x.textContent=settings.heroDescription;}
-      const blue=v=>/^#[0-9a-f]{6}$/i.test(v||'')?v:'';const b=blue(settings.primaryColor),o=blue(settings.accentColor);
-      if(b)document.querySelectorAll('.bg-suBlue,.text-suBlue,.border-suBlue').forEach(x=>{if(x.classList.contains('bg-suBlue'))x.style.backgroundColor=b;if(x.classList.contains('text-suBlue'))x.style.color=b;if(x.classList.contains('border-suBlue'))x.style.borderColor=b;});
-      if(o)document.querySelectorAll('.bg-suOrange,.text-suOrange,.border-suOrange').forEach(x=>{if(x.classList.contains('bg-suOrange'))x.style.backgroundColor=o;if(x.classList.contains('text-suOrange'))x.style.color=o;if(x.classList.contains('border-suOrange'))x.style.borderColor=o;});
+
+    // 13. Dynamic Highlights Stat Counters
+    try {
+      const projCounter = document.querySelector('#highlights a[href="#projects"] .stat-counter');
+      if (projCounter && Array.isArray(d.projects)) {
+        projCounter.setAttribute('data-target', String(d.projects.length));
+        projCounter.textContent = String(d.projects.length);
+      }
+      const certCounter = document.querySelector('#highlights a[href="#certificates"] .stat-counter');
+      if (certCounter && Array.isArray(d.certificates)) {
+        certCounter.setAttribute('data-target', String(d.certificates.length));
+        certCounter.textContent = String(d.certificates.length);
+      }
+      const skillCounter = document.querySelector('#highlights a[href="#skills"] .stat-counter');
+      if (skillCounter && Array.isArray(d.skills)) {
+        skillCounter.setAttribute('data-target', String(d.skills.length));
+        skillCounter.textContent = String(d.skills.length);
+      }
+    } catch (_) {}
+
+    document.documentElement.dataset.portfolioDataLoaded = 'true';
+
+    // 14. Realtime update toast notification
+    if (isRealtime) {
+      let toast = document.getElementById('realtime-sync-toast');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'realtime-sync-toast';
+        toast.style.cssText = 'position:fixed;bottom:24px;left:24px;background:#003399;color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,0.25);border-left:4px solid #FF9900;display:flex;align-items:center;gap:10px;transition:all 0.3s ease;';
+        document.body.appendChild(toast);
+      }
+      toast.innerHTML = '<span style="color:#22c55e;font-size:16px">●</span> Live update synced from Cloud Database!';
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateY(0)';
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(10px)';
+      }, 3000);
     }
-    document.documentElement.dataset.portfolioDataLoaded='true';
-  }catch(e){console.error('Portfolio could not load Supabase content:',e);document.documentElement.dataset.portfolioDataLoaded='error';}
-})();
+  } catch (e) {
+    console.error('Portfolio could not load Supabase content:', e);
+    document.documentElement.dataset.portfolioDataLoaded = 'error';
+  }
+};
+
+// Initial invocation on page load
+window.loadAndRenderPortfolio(false);
+
+// 1. BroadcastChannel Listener (Instant local tab-to-tab sync)
+if (typeof BroadcastChannel !== 'undefined') {
+  try {
+    const syncChannel = new BroadcastChannel('portfolio_sync_channel');
+    syncChannel.onmessage = function(event) {
+      if (event.data && event.data.type === 'SECTION_UPDATED') {
+        console.log('[Portfolio Realtime] Broadcast sync received for:', event.data.section);
+        window.loadAndRenderPortfolio(true);
+      }
+    };
+  } catch (_) {}
+}
+
+// 2. Storage event listener (fallback cross-window sync)
+window.addEventListener('storage', function(e) {
+  if (e.key === 'uk_portfolio_content_all' || (e.key && e.key.startsWith('uk_portfolio_content_'))) {
+    window.loadAndRenderPortfolio(true);
+  }
+});
+
+// 3. Supabase Realtime WebSocket Listener (Pushes live updates to any device anywhere)
+if (window.supabase) {
+  try {
+    const SUPABASE_URL = 'https://rxbggmwzgbshmpjareav.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_ptDO2uplwLjlJ2i-KCvkmA_1rcvyeGY';
+    const liveClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    liveClient.channel('portfolio_cloud_sync')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'portfolio_content' }, function(payload) {
+        console.log('[Portfolio Realtime] Cloud Database push received:', payload);
+        window.loadAndRenderPortfolio(true);
+      })
+      .subscribe();
+  } catch (err) {
+    console.warn('[Portfolio Realtime] Cloud subscription:', err);
+  }
+}
 </script>
 
 <!-- Portfolio Visitor Tracking -->
