@@ -1645,17 +1645,10 @@
           if (!isNaN(v) && v > 0) dbViews = Math.max(dbViews, v);
         }
 
-        let finalViews = dbViews + 6;
+        let finalViews = dbViews;
         try {
-          const resp = await fetch('https://api.visitorbadge.io/api/visitors?path=kakkadumang_portfolio', { cache: 'no-store' });
-          if (resp.ok) {
-            const svg = await resp.text();
-            const match = svg.match(/VISITORS:\s*(\d+)/i) || svg.match(/<text[^>]*>(\d+)<\/text>/i) || svg.match(/>(\d+)<\/text>/i);
-            if (match && match[1]) {
-              const hits = parseInt(match[1], 10);
-              if (!isNaN(hits) && hits > 0) finalViews = dbViews + hits;
-            }
-          }
+          const cached = Number(localStorage.getItem('uk_synced_view_cache') || '0');
+          if (cached > 0) finalViews = Math.max(finalViews, cached);
         } catch (_) {}
 
         const todayCount = Math.max(19, Math.round(finalViews * 0.1));
@@ -3513,7 +3506,8 @@
 
     // Start verification on load
     verifyAdmin().then(() => {
-      setInterval(refreshVisitorStats, 4000);
+      // Dashboard reads current metrics without auto-increment polling
+      refreshVisitorStats();
     }).catch(error => {
       el("loadingMessage").textContent = error.message || "Could not verify admin access.";
       el("loadingMessage").className = "notice show error";
