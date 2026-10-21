@@ -1472,6 +1472,7 @@
         university: "GLS University, Ahmedabad",
         heroTitle: "Welcome to the Official Portfolio of",
         heroDescription: "Building reliable desktop and web applications with modern technologies.",
+        totalViews: 248,
         primaryColor: "#003399",
         accentColor: "#FF9900"
       }
@@ -1627,39 +1628,46 @@
 
     async function refreshVisitorStats() {
       try {
-        let dbCount = 0;
+        let dbViews = 248;
         if (client) {
           try {
-            const { count, error } = await client.from("site_stats").select("id", { count: "exact", head: true });
-            if (!error && typeof count === "number" && count > 0) dbCount = count;
+            const { data } = await client.from("portfolio_content").select("content").eq("section", "site_settings").maybeSingle();
+            if (data && data.content && data.content.totalViews) {
+              const v = Number(data.content.totalViews);
+              if (!isNaN(v) && v > 0) dbViews = v;
+            }
           } catch (_) {}
+        }
 
-          if (dbCount === 0) {
-            try {
-              const { data: rpcTotal } = await client.rpc("get_total_page_views");
-              if (typeof rpcTotal === "number" && rpcTotal > 0) dbCount = rpcTotal;
-            } catch (_) {}
+        const localStore = JSON.parse(localStorage.getItem("uk_portfolio_content_all") || "{}");
+        if (localStore?.site_settings?.totalViews) {
+          const v = Number(localStore.site_settings.totalViews);
+          if (!isNaN(v) && v > 0) dbViews = Math.max(dbViews, v);
+        }
+
+        let finalViews = dbViews + 6;
+        try {
+          const resp = await fetch('https://api.visitorbadge.io/api/visitors?path=kakkadumang_portfolio', { cache: 'no-store' });
+          if (resp.ok) {
+            const svg = await resp.text();
+            const match = svg.match(/VISITORS:\s*(\d+)/i) || svg.match(/<text[^>]*>(\d+)<\/text>/i) || svg.match(/>(\d+)<\/text>/i);
+            if (match && match[1]) {
+              const hits = parseInt(match[1], 10);
+              if (!isNaN(hits) && hits > 0) finalViews = dbViews + hits;
+            }
           }
-        }
+        } catch (_) {}
 
-        const localViews = Number(localStorage.getItem("uk_local_site_views") || "0");
-        const finalViews = Math.max(dbCount, 224 + localViews);
-
-        // Track today's views dynamically
-        const todayStr = new Date().toISOString().slice(0, 10);
-        let todayCount = Number(localStorage.getItem("uk_today_views_" + todayStr) || "0");
-        if (todayCount === 0) {
-          todayCount = 19 + Math.floor(localViews * 0.4);
-          localStorage.setItem("uk_today_views_" + todayStr, String(todayCount));
-        }
+        const todayCount = Math.max(19, Math.round(finalViews * 0.1));
+        const weekCount = Math.max(78, Math.round(finalViews * 0.38));
 
         if (el("totalViews")) el("totalViews").textContent = finalViews.toLocaleString("en-IN") + "+";
         if (el("todayViews")) el("todayViews").textContent = todayCount.toLocaleString("en-IN") + "+";
-        if (el("weekViews")) el("weekViews").textContent = String(Math.max(78, Math.round(finalViews * 0.38))) + "+";
+        if (el("weekViews")) el("weekViews").textContent = weekCount.toLocaleString("en-IN") + "+";
       } catch (_) {
-        const fallback = Number(localStorage.getItem("uk_local_site_views") || "0") + 224;
-        if (el("totalViews")) el("totalViews").textContent = fallback.toLocaleString("en-IN") + "+";
-        if (el("todayViews")) el("todayViews").textContent = "19+";
+        if (el("totalViews")) el("totalViews").textContent = "252+";
+        if (el("todayViews")) el("todayViews").textContent = "25+";
+        if (el("weekViews")) el("weekViews").textContent = "88+";
       }
     }
 
@@ -1858,6 +1866,7 @@
           ${field("University Name", "university", d.university || "")}
           ${field("Hero Subtitle Heading", "heroTitle", d.heroTitle || "")}
           ${textareaField("Hero Description", "heroDescription", d.heroDescription || "")}
+          ${field("Total Synchronized Portfolio Visitors Count (Same across Android, Laptop, Local & GitHub)", "totalViews", d.totalViews || "248", "number")}
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
             ${field("Primary Academic Blue (Hex)", "primaryColor", d.primaryColor || "#003399")}
             ${field("Accent Orange Color (Hex)", "accentColor", d.accentColor || "#FF9900")}
@@ -2617,6 +2626,47 @@
       }
     }
 
+        function openPdfInModal(blobUrl, filename) {
+      let modal = el("pdfViewerModal");
+      if (!modal) {
+        modal = document.createElement("div");
+        modal.id = "pdfViewerModal";
+        modal.style.cssText = "position:fixed;inset:0;background:rgba(7,25,59,0.85);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px;box-sizing:border-box;-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);";
+        modal.innerHTML = `
+          <div style="background:#fff;width:min(920px, 98vw);height:min(92vh, 850px);border-radius:14px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,0.4);border:2px solid #003399">
+            <div style="background:#003399;color:#fff;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #ff9900;flex-wrap:wrap;gap:8px">
+              <div style="display:flex;align-items:center;gap:10px;min-width:0">
+                <span style="font-size:18px">📄</span>
+                <strong id="pdfModalTitle" style="font-size:13.5px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:320px">${escapeHtml(filename)}</strong>
+              </div>
+              <div style="display:flex;gap:8px;align-items:center">
+                <a id="pdfModalDownloadLink" href="${blobUrl}" download="${escapeHtml(filename)}" class="btn btn-orange" style="min-height:30px;padding:4px 12px;font-size:12px;text-decoration:none">📥 Download</a>
+                <a id="pdfModalNewTabLink" href="${blobUrl}" target="_blank" rel="noopener" class="btn btn-secondary" style="min-height:30px;padding:4px 12px;font-size:12px;text-decoration:none">↗ New Tab</a>
+                <button type="button" id="closePdfModalBtn" class="btn btn-danger" style="min-height:30px;padding:4px 12px;font-size:12px">✕ Close</button>
+              </div>
+            </div>
+            <div style="flex:1;background:#525659;position:relative">
+              <iframe id="pdfModalFrame" src="${blobUrl}#toolbar=1&navpanes=0" style="width:100%;height:100%;border:none;background:#525659" title="PDF Preview"></iframe>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(modal);
+        modal.querySelector("#closePdfModalBtn").addEventListener("click", () => {
+          modal.style.display = "none";
+        });
+        modal.addEventListener("click", (e) => {
+          if (e.target === modal) modal.style.display = "none";
+        });
+      } else {
+        modal.querySelector("#pdfModalTitle").textContent = filename;
+        modal.querySelector("#pdfModalDownloadLink").href = blobUrl;
+        modal.querySelector("#pdfModalDownloadLink").download = filename;
+        modal.querySelector("#pdfModalNewTabLink").href = blobUrl;
+        modal.querySelector("#pdfModalFrame").src = `${blobUrl}#toolbar=1&navpanes=0`;
+        modal.style.display = "flex";
+      }
+    }
+
     function generateReviewsPdf(rows, singleTitle = null) {
       if (!rows || !rows.length) {
         alert("No reviews available to generate report.");
@@ -2918,37 +2968,95 @@
           doc.text("AUTHORIZED SIGNATURE", sigX + (sigW / 2), footerTop + 45, { align: "center" });
         }
 
-        // Output and Deliver PDF
+        // Output and Deliver PDF (Optimized for Android Mobile & Laptop)
         const blob = doc.output("blob");
         const filename = singleTitle
           ? `Umang_Kakkad_Verified_Review_${singleTitle}.pdf`
           : `Umang_Kakkad_Visitor_Reviews_Report.pdf`;
 
-        // 1. Direct jsPDF download
-        doc.save(filename);
-
-        // 2. Blob anchor trigger (Mobile & Desktop fallback)
         const blobUrl = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = blobUrl;
-        a.download = filename;
-        document.body.appendChild(a);
-        try { a.click(); } catch (_) {}
-        document.body.removeChild(a);
 
-        // 3. User feedback with 1-click open button (ideal for mobile phone users)
+        // 1. Clean unified download trigger
+        function triggerDownload() {
+          try {
+            const a = document.createElement("a");
+            a.style.display = "none";
+            a.href = blobUrl;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => { if (a.parentNode) a.parentNode.removeChild(a); }, 1000);
+          } catch (_) {
+            try { doc.save(filename); } catch (e) { window.open(blobUrl, "_blank"); }
+          }
+        }
+
+        // Trigger download
+        triggerDownload();
+
+        // 2. Check for Android Native Web Share API
+        let canShareFile = false;
+        let pdfFile = null;
+        try {
+          if (typeof File !== "undefined" && typeof navigator !== "undefined" && typeof navigator.canShare === "function") {
+            pdfFile = new File([blob], filename, { type: "application/pdf" });
+            canShareFile = navigator.canShare({ files: [pdfFile] });
+          }
+        } catch (_) {}
+
+        // 3. Interactive Notice with Direct Open, Android App Open, and Download buttons
         const noticeBox = el("feedbackNotice");
         noticeBox.className = "notice show success";
         noticeBox.innerHTML = `
-          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
             <div>
-              <strong>✓ PDF Report Downloaded:</strong> File <code>${filename}</code> generated with Umang Kakkad's authorized signature on every page.
+              <strong style="font-size:14px">✓ Official PDF Report Ready:</strong>
+              <div style="font-size:13px;margin-top:2px">File <code>${filename}</code> generated with Umang Kakkad's authorized signature on every page.</div>
             </div>
-            <a href="${blobUrl}" target="_blank" rel="noopener" class="btn btn-secondary" style="min-height:36px;padding:6px 14px;font-size:12px">
-              👁️ Open / View PDF
-            </a>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+              <button type="button" id="openPdfViewerBtn" class="btn btn-secondary" style="min-height:36px;padding:6px 14px;font-size:12px;font-weight:700">
+                👁️ Direct Open / View PDF
+              </button>
+              ${canShareFile ? `
+                <button type="button" id="shareAndroidPdfBtn" class="btn btn-orange" style="min-height:36px;padding:6px 14px;font-size:12px;font-weight:700">
+                  📲 Open in Android PDF App
+                </button>
+              ` : ''}
+              <button type="button" id="downloadAgainBtn" class="btn btn-secondary" style="min-height:36px;padding:6px 12px;font-size:12px">
+                📥 Download
+              </button>
+            </div>
           </div>
         `;
+
+        const openBtn = document.getElementById("openPdfViewerBtn");
+        if (openBtn) {
+          openBtn.addEventListener("click", () => {
+            openPdfInModal(blobUrl, filename);
+          });
+        }
+
+        const shareBtn = document.getElementById("shareAndroidPdfBtn");
+        if (shareBtn && pdfFile) {
+          shareBtn.addEventListener("click", async () => {
+            try {
+              await navigator.share({
+                title: "Umang Kakkad Portfolio Reviews",
+                text: "Official verified visitor feedback certificate.",
+                files: [pdfFile]
+              });
+            } catch (shareErr) {
+              if (shareErr.name !== "AbortError") {
+                openPdfInModal(blobUrl, filename);
+              }
+            }
+          });
+        }
+
+        const dlBtn = document.getElementById("downloadAgainBtn");
+        if (dlBtn) {
+          dlBtn.addEventListener("click", triggerDownload);
+        }
       } catch (err) {
         console.error("PDF generation failed:", err);
         notice(el("feedbackNotice"), "PDF generation failed: " + err.message, "error");
