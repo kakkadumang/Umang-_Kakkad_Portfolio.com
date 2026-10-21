@@ -756,24 +756,284 @@
     .hidden { display: none !important; }
 
     @media (max-width: 860px) {
-      .layout { grid-template-columns: 1fr; }
-      aside {
-        position: relative;
-        top: 0;
+      html, body {
+        overflow-x: hidden !important;
+        width: 100% !important;
+        max-width: 100vw !important;
+      }
+
+      /* Responsive Topbar */
+      .topbar {
         height: auto;
+        min-height: 56px;
+        padding: 10px 12px;
+        flex-wrap: wrap;
+        gap: 8px 12px;
+        width: 100%;
+        max-width: 100vw;
+        box-sizing: border-box;
+      }
+
+      .brand {
+        gap: 8px;
+        flex: 1 1 auto;
+      }
+
+      .mark {
+        width: 36px;
+        height: 36px;
+        font-size: 13px;
+        flex-shrink: 0;
+      }
+
+      .brand-name {
+        font-size: 14px;
+        line-height: 1.2;
+      }
+
+      .brand-sub {
+        display: none; /* Hide long subtitle on mobile so topbar stays compact */
+      }
+
+      .top-actions {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
+        justify-content: flex-end;
+      }
+
+      .live-indicator {
+        font-size: 9.5px;
+        padding: 4px 8px;
+      }
+
+      .admin-pill {
+        font-size: 10px;
+        padding: 4px 8px;
+        max-width: 130px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .top-actions .btn {
+        min-height: 32px;
+        padding: 6px 10px;
+        font-size: 11px;
+        border-radius: 8px;
+      }
+
+      /* Responsive Layout & Sidebar */
+      .layout {
+        grid-template-columns: 100% !important;
+        width: 100% !important;
+        max-width: 100vw !important;
+        min-width: 0 !important;
+        overflow-x: hidden !important;
+      }
+
+      aside {
+        position: sticky;
+        top: 0;
+        z-index: 45;
+        height: auto;
+        max-height: none;
         display: flex;
         flex-direction: row;
         overflow-x: auto;
-        padding: 10px;
+        overflow-y: hidden;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+        padding: 8px 10px;
+        gap: 6px;
+        width: 100% !important;
+        max-width: 100vw !important;
+        min-width: 0 !important;
+        box-sizing: border-box;
         border-right: 0;
         border-bottom: 3px solid var(--orange);
+        box-shadow: 0 4px 12px rgba(7, 25, 59, 0.12);
+        scrollbar-width: none;
       }
-      .nav-label, .aside-foot { display: none !important; }
-      .nav-btn { flex: 0 0 auto; white-space: nowrap; padding: 10px 14px; }
-      .sticky-update-bar { left: 0; }
-      main { padding: 18px 14px 130px; }
+
+      aside::-webkit-scrollbar {
+        display: none;
+      }
+
+      .nav-label, .aside-foot {
+        display: none !important;
+      }
+
+      .nav-btn {
+        flex: 0 0 auto !important;
+        width: auto !important;
+        white-space: nowrap;
+        padding: 8px 13px;
+        font-size: 12px;
+        border-radius: 8px;
+        margin: 0;
+      }
+
+      /* Full width Main content & Crisp 2-column cards */
+      main {
+        width: 100% !important;
+        max-width: 100vw !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+        padding: 14px 12px 130px !important;
+        overflow-x: hidden !important;
+      }
+
+      .page-head {
+        margin-bottom: 14px;
+        padding-bottom: 12px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+
+      .page-head h1 {
+        font-size: 20px;
+        line-height: 1.25;
+      }
+
+      .page-head .sub {
+        font-size: 12px;
+      }
+
+      /* 2-Column Responsive Grid on mobile - Fills complete width */
+      .grid {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+        margin-bottom: 16px !important;
+        width: 100% !important;
+      }
+
+      .stat-card {
+        padding: 14px 11px;
+        border-radius: 12px;
+        width: 100% !important;
+        box-sizing: border-box;
+      }
+
+      .stat-card .metric-label {
+        font-size: 9.5px;
+        letter-spacing: 0.2px;
+      }
+
+      .stat-card .metric {
+        font-size: 22px;
+        margin: 5px 0 2px;
+      }
+
+      .stat-card .metric-desc {
+        font-size: 9.5px;
+        margin-top: 2px;
+        line-height: 1.3;
+      }
+
+      .card {
+        padding: 16px 12px;
+        border-radius: 14px;
+        margin-bottom: 14px;
+        width: 100% !important;
+        box-sizing: border-box;
+      }
+
+      .card h2 {
+        font-size: 15px;
+      }
+
+      .card .sub {
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .actions {
+        gap: 8px;
+      }
+
+      .actions .btn {
+        font-size: 12px;
+        padding: 8px 12px;
+        min-height: 36px;
+      }
+
+      .shortcut-grid {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+        width: 100% !important;
+      }
+
+      .shortcut-card {
+        padding: 10px 8px;
+        gap: 8px;
+        border-radius: 10px;
+      }
+
+      .shortcut-icon {
+        font-size: 18px;
+      }
+
+      .shortcut-name {
+        font-size: 11.5px;
+      }
+
+      .shortcut-sub {
+        font-size: 9.5px;
+      }
+
+      /* Sticky bottom bar - full mobile width */
+      .sticky-update-bar {
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        max-width: 100vw !important;
+        padding: 10px 12px !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 8px !important;
+        box-sizing: border-box !important;
+        z-index: 60 !important;
+      }
+
+      .sticky-update-copy strong {
+        font-size: 11.5px;
+        line-height: 1.2;
+      }
+
+      .sticky-update-copy span {
+        display: none !important;
+      }
+
+      .sticky-update-bar .btn {
+        min-height: 34px !important;
+        padding: 7px 12px !important;
+        font-size: 11px !important;
+        white-space: nowrap !important;
+      }
+
       .footer-content { flex-direction: column; align-items: flex-start; }
       .footer-signature-box { text-align: left; width: 100%; }
+    }
+
+    @media (max-width: 480px) {
+      .admin-pill {
+        display: none !important; /* Hide long email pill on tiny phones for maximum space */
+      }
+      .grid {
+        gap: 6px !important;
+      }
+      .stat-card {
+        padding: 12px 9px;
+      }
+      .stat-card .metric {
+        font-size: 20px;
+      }
     }
   </style>
 </head>
