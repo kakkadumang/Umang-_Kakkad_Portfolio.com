@@ -1048,6 +1048,7 @@
       </div>
     </div>
     <div class="top-actions">
+      <span class="live-indicator" style="background:#e8f5e9;color:#1b5e20;border:1px solid #a5d6a7"><span class="live-dot" style="background:#2e7d32"></span> ZERO-UPLOAD LIVE CLOUD SYNC</span>
       <span class="live-indicator"><span class="live-dot"></span> LIVE DATABASE</span>
       <span id="adminEmail" class="admin-pill">Connecting…</span>
       <a href="../index.html" class="btn btn-secondary" target="_blank" rel="noopener" title="Open portfolio website in new tab">🌐 View Website</a>
@@ -1653,7 +1654,13 @@
           } catch (_) {}
         }
       }
-      alert("Baseline restored with all Events & Gallery photos and INFLIBNET 4 photos!");
+      try {
+        if (typeof BroadcastChannel !== 'undefined') {
+          const syncChannel = new BroadcastChannel('portfolio_sync_channel');
+          syncChannel.postMessage({ type: 'SECTION_UPDATED', section: 'all', timestamp: Date.now() });
+        }
+      } catch (_) {}
+      alert("Baseline restored with all Events & Gallery photos and INFLIBNET 4 photos! Live website and local site updated.");
       await refreshOverview();
     }
     el("cleanSlateBtn").addEventListener("click", cleanSlateReset);
@@ -2113,11 +2120,38 @@
     async function saveSection() {
       clearNotice(el("editorNotice"));
       const saveButtons = [el("saveBtn"), el("saveTopBtn"), el("stickySaveBtn")];
-      saveButtons.forEach(b => { if (b) { b.disabled = true; b.textContent = "Saving to database…"; } });
+      saveButtons.forEach(b => { if (b) { b.disabled = true; b.textContent = "Saving to Cloud Database…"; } });
 
       try {
+        // 1. Verify active authenticated Supabase admin session
+        if (!client) setupClient();
+        const { data: sessData, error: sessErr } = await client.auth.getSession();
+        if (sessErr || !sessData || !sessData.session) {
+          const { data: refData, error: refErr } = await client.auth.refreshSession();
+          if (refErr || !refData || !refData.session) {
+            notice(el("editorNotice"), "⚠️ Admin session expired. Please re-login at login.html to save changes live to the database.", "error");
+            el("recordStatus").textContent = "SESSION EXPIRED";
+            return;
+          }
+        }
+
         const parsed = collectForm();
 
+        // 2. Perform upsert directly into Supabase Cloud Database table portfolio_content
+        const { error: dbError } = await client.from("portfolio_content").upsert({
+          section: currentSection,
+          content: parsed,
+          updated_at: new Date().toISOString()
+        }, { onConflict: "section" });
+
+        if (dbError) {
+          console.error("Supabase upsert error:", dbError);
+          notice(el("editorNotice"), "❌ Cloud Database Save Failed: " + (dbError.message || "Permission / RLS issue") + ". Stored only in local preview cache.", "error");
+          el("recordStatus").textContent = "DB ERROR";
+          return;
+        }
+
+        // 3. Update localStorage fallback cache
         localStorage.setItem("uk_portfolio_content_" + currentSection, JSON.stringify(parsed));
         let allStore = {};
         try { allStore = JSON.parse(localStorage.getItem("uk_portfolio_content_all") || "{}"); } catch(_) {}
@@ -2131,27 +2165,27 @@
           } catch (_) {}
         }
 
-        let dbOk = false;
-        if (client) {
-          const { error } = await client.from("portfolio_content").upsert({
-            section: currentSection,
-            content: parsed,
-            updated_at: new Date().toISOString()
-          }, { onConflict: "section" });
-          if (!error) dbOk = true;
-          else console.warn("Supabase save warning:", error);
-        }
+        // 4. Broadcast instant realtime synchronization across all tabs and local windows
+        try {
+          if (typeof BroadcastChannel !== 'undefined') {
+            const syncChannel = new BroadcastChannel('portfolio_sync_channel');
+            syncChannel.postMessage({ type: 'SECTION_UPDATED', section: currentSection, content: parsed, timestamp: Date.now() });
+          }
+        } catch (_) {}
 
         currentContent = parsed;
-        el("recordStatus").textContent = "SAVED";
-        notice(el("editorNotice"), "✓ Changes saved successfully! Both your live website and local site are now updated with this data.", "success");
+        el("recordStatus").textContent = "SAVED IN CLOUD";
+        const timeStr = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        notice(el("editorNotice"), `✓ Successfully saved to Cloud Database at ${timeStr}! Both your GitHub Pages site and local site are now updated live — zero git upload required!`, "success");
         await refreshOverview();
       } catch (e) {
-        notice(el("editorNotice"), "Saved locally. Database notice: " + (e.message || "Saved to browser storage."), "info");
+        console.error("Save error:", e);
+        notice(el("editorNotice"), "Save error: " + (e.message || "Could not complete database save."), "error");
       } finally {
         saveButtons.forEach(b => { if (b) { b.disabled = false; b.textContent = "💾 Save Changes to Database"; } });
         if (el("saveTopBtn")) el("saveTopBtn").textContent = "💾 Save Changes";
       }
+    }
     }
 
     function addNewRecord() {
