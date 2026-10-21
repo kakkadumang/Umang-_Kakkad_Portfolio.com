@@ -1092,6 +1092,14 @@
 
     <!-- Main Content Area -->
     <main>
+      <!-- Unauthenticated Mode Warning Banner -->
+      <div id="authWarningBanner" style="display:none;margin-bottom:20px;background:#fff8e1;border:1px solid #ffe082;color:#8d6e00;padding:14px 20px;border-radius:12px;font-size:14px;font-weight:600;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,0.04)">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:20px">🔒</span>
+          <span>You are viewing the dashboard in <strong>Preview Mode</strong>. To edit and save changes live to the Cloud Database, please log in with your Admin account.</span>
+        </div>
+        <a href="login.html" class="btn btn-orange" style="text-decoration:none;font-size:13px;padding:8px 16px;white-space:nowrap">Sign In to Dashboard →</a>
+      </div>
       <!-- Section: Overview -->
       <section id="overviewPage">
         <div class="page-head">
@@ -1533,6 +1541,7 @@
 
       // 3. Background non-blocking session verification & content sync
       (async () => {
+        let hasActiveSession = false;
         try {
           if (client) {
             const { data } = await Promise.race([
@@ -1542,11 +1551,19 @@
             if (data?.session?.user?.email) {
               el("adminEmail").textContent = data.session.user.email;
               currentUserId = data.session.user.id;
+              hasActiveSession = true;
+              const warn = el("authWarningBanner");
+              if (warn) warn.style.display = "none";
             }
           }
         } catch (_) {}
 
-        try { await autoSyncInitialContent(); } catch(_) {}
+        if (!hasActiveSession && (!savedUser || !savedUser.email)) {
+          const warn = el("authWarningBanner");
+          if (warn) warn.style.display = "flex";
+        }
+
+        try { await autoSyncInitialContent(hasActiveSession); } catch(_) {}
         try { await refreshOverview(); } catch(_) {}
       })();
 
@@ -1554,24 +1571,27 @@
     }
 
     // Ensures Events and INFLIBNET 4 Photos exist in DB and LocalStorage
-    async function autoSyncInitialContent() {
+    async function autoSyncInitialContent(hasSession = false) {
       try {
         const localEvents = localStorage.getItem("uk_portfolio_content_events");
         if (!localEvents || localEvents === "[]") {
           localStorage.setItem("uk_portfolio_content_events", JSON.stringify(defaults.events));
-          if (client) {
+        }
+
+        const localExp = localStorage.getItem("uk_portfolio_content_experience");
+        if (!localExp || localExp === "[]" || !localExp.includes("inflibnet-visit-4")) {
+          localStorage.setItem("uk_portfolio_content_experience", JSON.stringify(defaults.experience));
+        }
+
+        if (client && hasSession) {
+          if (!localEvents || localEvents === "[]") {
             await client.from("portfolio_content").upsert({
               section: "events",
               content: defaults.events,
               updated_at: new Date().toISOString()
             }, { onConflict: "section" });
           }
-        }
-
-        const localExp = localStorage.getItem("uk_portfolio_content_experience");
-        if (!localExp || localExp === "[]" || !localExp.includes("inflibnet-visit-4")) {
-          localStorage.setItem("uk_portfolio_content_experience", JSON.stringify(defaults.experience));
-          if (client) {
+          if (!localExp || localExp === "[]" || !localExp.includes("inflibnet-visit-4")) {
             await client.from("portfolio_content").upsert({
               section: "experience",
               content: defaults.experience,
