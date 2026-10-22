@@ -1188,16 +1188,9 @@ if (typeof navigator !== 'undefined' && navigator.onLine === false) {
 
 </head>
 <body>
-
-    <!-- ========================================== -->
-    <!-- OFFLINE DETECTION & REFRESH ERROR SCREEN  -->
-    <!-- ========================================== -->
-    <!-- ============================================================== -->
-    <!-- MICROSOFT/EDGE INSPIRED PROFESSIONAL OFFLINE DETECTION SCREEN  -->
-    <!-- ============================================================== -->
-    <!-- ============================================================== -->
+<!-- ============================================================== -->
     <!-- 100% SOLID FULL-SCREEN OFFLINE DETECTION & ERROR SYSTEM        -->
-    <!-- (ZERO WEBSITE VISIBLE BEHIND - PURE EDGE-TO-EDGE COVERAGE)    -->
+    <!-- (ZERO WEBSITE VISIBLE BEHIND - DIRECT OPEN ON RECONNECT)       -->
     <!-- ============================================================== -->
     <div id="uk-offline-screen" class="uk-offline-screen" role="alertdialog" aria-modal="true" aria-labelledby="uk-offline-title" aria-describedby="uk-offline-desc">
         <div class="uk-offline-container">
@@ -1244,7 +1237,7 @@ if (typeof navigator !== 'undefined' && navigator.onLine === false) {
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="10"></circle>
                             <line x1="2" y1="12" x2="22" y2="12"></line>
-                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1 4-10z"></path>
                         </svg>
                     </div>
                     <span class="uk-node-label">Internet</span>
@@ -1265,7 +1258,7 @@ if (typeof navigator !== 'undefined' && navigator.onLine === false) {
                 <h2 class="uk-offline-main-title" id="uk-offline-title">Looks like you're not connected to the internet</h2>
                 <p class="uk-offline-hindi-lead">इंटरनेट कनेक्शन उपलब्ध नहीं है</p>
                 <p class="uk-offline-sub-message" id="uk-offline-desc">
-                    Let's get you back online so you can view Umang Kakkad's Academic Portfolio!
+                    Please check your network connection below or tap Refresh once you are back online.
                 </p>
                 <div class="uk-error-code-chip">ERR_INTERNET_DISCONNECTED</div>
             </div>
@@ -1286,7 +1279,7 @@ if (typeof navigator !== 'undefined' && navigator.onLine === false) {
                 </button>
             </div>
 
-            <!-- Error/Success Toast -->
+            <!-- Error Toast -->
             <div id="uk-offline-toast" class="uk-offline-toast" style="display: none;"></div>
 
             <!-- 5. Expandable Recommendations -->
@@ -1336,40 +1329,10 @@ if (typeof navigator !== 'undefined' && navigator.onLine === false) {
                             <p>If you are connected to a router with no internet access, restart your router or check your internet service provider.</p>
                         </div>
                     </div>
-
-                    <div class="uk-acc-item" onclick="window.ukToggleAccordion(this)">
-                        <div class="uk-acc-head">
-                            <div class="uk-acc-title">
-                                <span class="uk-acc-num">4</span>
-                                <strong>Automatic Live Reconnection</strong>
-                            </div>
-                            <span class="uk-acc-chevron">▾</span>
-                        </div>
-                        <div class="uk-acc-body">
-                            <p>No extra steps needed! This page is actively listening for your signal. The moment internet is back, the website will automatically open.</p>
-                        </div>
-                    </div>
                 </div>
             </div>
-
-            <!-- 6. Card Footer -->
-            <div class="uk-card-footer">
-                <span>Umang Kakkad • Official Academic Portfolio</span>
-                <span class="uk-live-dot-pulse">● Auto-Reconnect Active</span>
-            </div>
         </div>
     </div>
-            </div>
-
-            <!-- 6. Card Footer -->
-            <div class="uk-card-footer">
-                <span>Umang Kakkad • Official Academic Portfolio</span>
-                <span class="uk-live-dot-pulse">● Auto-Reconnect Active</span>
-            </div>
-        </div>
-    </div>
-    </div>
-
 
   <!-- TOP BAR -->
   <header class="topbar">
@@ -1728,7 +1691,6 @@ if (typeof navigator !== 'undefined' && navigator.onLine === false) {
   </script>
 
 <!-- Offline Connection Manager Controller -->
-<!-- Offline Connection Manager Controller -->
 <script id="uk-offline-manager-script">
 (function() {
     'use strict';
@@ -1736,20 +1698,9 @@ if (typeof navigator !== 'undefined' && navigator.onLine === false) {
     function getEl(id) { return document.getElementById(id); }
 
     const overlay = getEl('uk-offline-screen');
-    const banner = getEl('uk-offline-banner');
-    const alertEmoji = getEl('uk-alert-emoji');
-    const alertMainTitle = getEl('uk-alert-main-title');
-    const alertSubTitle = getEl('uk-alert-sub-title');
     const retryBtn = getEl('uk-offline-btn');
     const btnText = getEl('uk-offline-btn-text');
     const toast = getEl('uk-offline-toast');
-
-    const nodeWifi = getEl('uk-node-wifi');
-    const nodeWeb = getEl('uk-node-web');
-    const conn1 = getEl('uk-connector-1');
-    const conn2 = getEl('uk-connector-2');
-    const badgeCross1 = getEl('uk-badge-cross-1');
-    const badgeCross2 = getEl('uk-badge-cross-2');
 
     window.ukToggleAccordion = function(item) {
         if (item) item.classList.toggle('active');
@@ -1768,7 +1719,7 @@ if (typeof navigator !== 'undefined' && navigator.onLine === false) {
         }
     };
 
-    async function testActualConnection(timeoutMs = 3000) {
+    async function testActualConnection(timeoutMs = 2500) {
         if (!navigator.onLine) return false;
         if (window.location.protocol === 'file:') return true;
 
@@ -1793,20 +1744,6 @@ if (typeof navigator !== 'undefined' && navigator.onLine === false) {
         if (overlay) overlay.style.display = 'flex';
         document.body.style.overflow = 'hidden';
 
-        // Diagram in offline state
-        if (nodeWifi) nodeWifi.className = 'uk-diagram-node uk-node-disconnected';
-        if (nodeWeb) nodeWeb.className = 'uk-diagram-node uk-node-disconnected';
-        if (conn1) conn1.classList.remove('connected');
-        if (conn2) conn2.classList.remove('connected');
-        if (badgeCross1) badgeCross1.textContent = '✕';
-        if (badgeCross2) badgeCross2.textContent = '✕';
-
-        // Banner in yellow offline state
-        if (banner) banner.className = 'uk-offline-alert-banner';
-        if (alertEmoji) alertEmoji.textContent = '⚠️';
-        if (alertMainTitle) alertMainTitle.textContent = 'Wi-Fi or Mobile Data is disconnected.';
-        if (alertSubTitle) alertSubTitle.textContent = 'Your device cannot reach the network right now.';
-
         if (retryBtn) {
             retryBtn.classList.remove('is-loading', 'connected');
         }
@@ -1814,54 +1751,31 @@ if (typeof navigator !== 'undefined' && navigator.onLine === false) {
         if (toast) toast.style.display = 'none';
     }
 
+    // Direct site open with NO delays, NO lingering banners
     function hideOfflineScreen(reload = false) {
         document.documentElement.classList.remove('uk-is-offline');
         document.body.style.overflow = '';
         if (overlay) overlay.style.display = 'none';
-        if (reload) window.location.reload();
+        if (reload) {
+            window.location.reload();
+        }
     }
 
+    // Direct immediate site open when connection is restored
     function handleOnlineRestored() {
-        // Diagram in green connected state
-        if (nodeWifi) nodeWifi.className = 'uk-diagram-node uk-node-connected';
-        if (nodeWeb) nodeWeb.className = 'uk-diagram-node uk-node-connected';
-        if (conn1) conn1.classList.add('connected');
-        if (conn2) conn2.classList.add('connected');
-        if (badgeCross1) badgeCross1.textContent = '✔';
-        if (badgeCross2) badgeCross2.textContent = '✔';
-
-        // Banner in green restored state
-        if (banner) banner.className = 'uk-offline-alert-banner connected';
-        if (alertEmoji) alertEmoji.textContent = '✅';
-        if (alertMainTitle) alertMainTitle.textContent = 'Internet Connection Restored!';
-        if (alertSubTitle) alertSubTitle.textContent = 'Your device is back online. Opening website...';
-
-        if (retryBtn) {
-            retryBtn.classList.remove('is-loading');
-            retryBtn.classList.add('connected');
-        }
-        if (btnText) btnText.textContent = '✅ Connected! Opening Website...';
-
-        if (toast) {
-            toast.className = 'uk-offline-toast success';
-            toast.textContent = '✅ Internet Connected! Opening website now...';
-            toast.style.display = 'block';
-        }
-
-        setTimeout(() => {
-            hideOfflineScreen(true);
-        }, 800);
+        hideOfflineScreen(true);
     }
 
     window.ukRetryConnection = async function() {
         if (!retryBtn) return;
         retryBtn.classList.add('is-loading');
-        if (btnText) btnText.textContent = 'Checking Connection...';
+        if (btnText) btnText.textContent = 'Checking...';
         if (toast) toast.style.display = 'none';
 
-        const isOnline = await testActualConnection(3500);
+        const isOnline = await testActualConnection(2500);
 
         if (isOnline) {
+            // Direct open immediately!
             handleOnlineRestored();
         } else {
             retryBtn.classList.remove('is-loading');
@@ -1879,7 +1793,7 @@ if (typeof navigator !== 'undefined' && navigator.onLine === false) {
     });
 
     window.addEventListener('online', async () => {
-        const reallyOnline = await testActualConnection(2500);
+        const reallyOnline = await testActualConnection(2000);
         if (reallyOnline) {
             handleOnlineRestored();
         } else {
@@ -1887,6 +1801,7 @@ if (typeof navigator !== 'undefined' && navigator.onLine === false) {
         }
     });
 
+    // Boot state: If online, DIRECTLY open site (never show offline screen)
     if (!navigator.onLine) {
         showOfflineScreen();
     } else {
