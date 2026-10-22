@@ -684,8 +684,692 @@
       }
     }
   </style>
+
+<!-- Umang Kakkad Portfolio - Offline Screen Styles -->
+<!-- Umang Kakkad Portfolio - Microsoft/Windows Inspired Professional Offline Screen Styles -->
+<!-- Umang Kakkad Portfolio - 100% Solid Full-Screen Offline Screen (Zero website peek-through) -->
+<style id="uk-offline-screen-styles">
+.uk-offline-screen {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 2147483647 !important;
+    display: none;
+    background-color: #f8fafc !important; /* 100% Solid - Zero transparency - Website is completely hidden */
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch;
+    padding: 32px 16px;
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+html.uk-is-offline .uk-offline-screen {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 100% Guarantee: Hide all website contents behind offline screen */
+html.uk-is-offline body > *:not(#uk-offline-screen) {
+    display: none !important;
+    visibility: hidden !important;
+}
+
+.uk-offline-container {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    padding: 34px 30px;
+    max-width: 660px;
+    width: 100%;
+    box-shadow: 0 15px 40px -10px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(226, 232, 240, 0.8);
+    box-sizing: border-box;
+    margin: auto;
+}
+
+/* 1. Connection Path Diagram */
+.uk-net-diagram {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin: 4px 0 24px 0;
+    padding: 18px 14px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+}
+
+.uk-diagram-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    flex: 0 0 auto;
+}
+
+.uk-node-icon-box {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+    border: 1.5px solid #cbd5e1;
+    color: #475569;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+}
+
+.uk-node-icon-box svg {
+    width: 28px;
+    height: 28px;
+}
+
+.uk-svg-mobile { display: none; }
+.uk-svg-laptop { display: block; }
+
+@media (max-width: 640px) {
+    .uk-svg-mobile { display: block; }
+    .uk-svg-laptop { display: none; }
+    .uk-offline-screen { padding: 16px 12px !important; }
+    .uk-offline-container { padding: 22px 14px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.04); background: #ffffff; }
+    .uk-node-icon-box { width: 46px; height: 46px; border-radius: 12px; }
+    .uk-node-icon-box svg { width: 22px; height: 22px; }
+    .uk-net-diagram { gap: 6px; padding: 14px 8px; }
+    .uk-offline-main-title { font-size: 19px !important; }
+    .uk-offline-hindi-lead { font-size: 14px !important; }
+    .uk-offline-actions-row { flex-direction: column !important; }
+    .uk-action-troubleshoot-btn { justify-content: center !important; }
+    .uk-acc-body { padding-left: 14px !important; }
+}
+
+.uk-node-active .uk-node-icon-box {
+    border-color: #003399;
+    color: #003399;
+    background: #eff6ff;
+}
+
+.uk-node-disconnected .uk-node-icon-box {
+    border-color: #fca5a5;
+    color: #dc2626;
+    background: #fef2f2;
+}
+
+.uk-node-connected .uk-node-icon-box {
+    border-color: #86efac;
+    color: #16a34a;
+    background: #f0fdf4;
+}
+
+.uk-node-label {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #475569;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+}
+
+.uk-diagram-connector {
+    flex: 1 1 auto;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    max-width: 90px;
+}
+
+.uk-connector-line {
+    width: 100%;
+    height: 2px;
+    border-top: 2px dashed #cbd5e1;
+}
+
+.uk-connector-badge {
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #fee2e2;
+    color: #dc2626;
+    font-size: 12px;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid #fca5a5;
+    top: 50%;
+    transform: translateY(-50%);
+    transition: all 0.3s ease;
+}
+
+.uk-diagram-connector.connected .uk-connector-line {
+    border-top: 2px solid #22c55e;
+}
+.uk-diagram-connector.connected .uk-connector-badge {
+    background: #dcfce7;
+    color: #16a34a;
+    border-color: #86efac;
+}
+
+/* 2. Yellow Status Alert Banner */
+.uk-offline-alert-banner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #fef9c3;
+    border: 1px solid #fde047;
+    color: #854d0e;
+    padding: 13px 18px;
+    border-radius: 12px;
+    margin-bottom: 22px;
+    text-align: left;
+    transition: all 0.3s ease;
+}
+
+.uk-offline-alert-banner.connected {
+    background: #dcfce7;
+    border-color: #86efac;
+    color: #15803d;
+}
+
+.uk-alert-icon {
+    font-size: 22px;
+    flex-shrink: 0;
+}
+
+.uk-alert-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.uk-alert-content strong {
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.uk-alert-content span {
+    font-size: 12.5px;
+    opacity: 0.9;
+}
+
+/* 3. Text & Titles */
+.uk-offline-text-header {
+    text-align: center;
+    margin-bottom: 22px;
+}
+
+.uk-offline-main-title {
+    margin: 0 0 6px 0;
+    font-size: 23px;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.3;
+}
+
+.uk-offline-hindi-lead {
+    margin: 0 0 8px 0;
+    font-size: 15.5px;
+    font-weight: 600;
+    color: #d97706;
+}
+
+.uk-offline-sub-message {
+    margin: 0 0 12px 0;
+    font-size: 14px;
+    color: #475569;
+    line-height: 1.5;
+}
+
+.uk-error-code-chip {
+    display: inline-block;
+    padding: 4px 12px;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 11.5px;
+    font-family: monospace;
+    color: #64748b;
+    font-weight: 600;
+}
+
+/* 4. Action Row */
+.uk-offline-actions-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.uk-action-primary-btn {
+    flex: 1 1 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 14px 22px;
+    font-size: 15px;
+    font-weight: 700;
+    color: #ffffff;
+    background: linear-gradient(135deg, #003399 0%, #002266 100%);
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(0, 51, 153, 0.35);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    outline: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.uk-action-primary-btn:hover {
+    background: linear-gradient(135deg, #FF9900 0%, #e68a00 100%);
+    box-shadow: 0 4px 16px rgba(255, 153, 0, 0.45);
+    transform: translateY(-1px);
+}
+
+.uk-action-primary-btn:active {
+    transform: translateY(1px);
+}
+
+.uk-action-primary-btn.connected {
+    background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
+    box-shadow: 0 4px 14px rgba(22, 163, 74, 0.4) !important;
+}
+
+.uk-action-primary-btn.is-loading .uk-btn-icon {
+    animation: ukSpin 1s linear infinite;
+}
+
+.uk-btn-icon {
+    width: 18px;
+    height: 18px;
+}
+
+.uk-action-troubleshoot-btn {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 14px 18px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #334155;
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.uk-action-troubleshoot-btn:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+
+/* Toast message */
+.uk-offline-toast {
+    margin-bottom: 18px;
+    padding: 11px 16px;
+    font-size: 13.5px;
+    font-weight: 600;
+    border-radius: 10px;
+    text-align: center;
+    animation: ukShake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+.uk-offline-toast.error {
+    background: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #f87171;
+}
+
+.uk-offline-toast.success {
+    background: #f0fdf4;
+    color: #166534;
+    border: 1px solid #4ade80;
+}
+
+/* 5. Recommendations Accordion */
+.uk-recommendations-wrapper {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 16px;
+    text-align: left;
+    margin-bottom: 18px;
+}
+
+.uk-rec-header strong {
+    font-size: 14.5px;
+    color: #0f172a;
+    display: block;
+    margin-bottom: 2px;
+}
+
+.uk-rec-header p {
+    margin: 0 0 12px 0;
+    font-size: 12.5px;
+    color: #64748b;
+}
+
+.uk-accordion-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.uk-acc-item {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.uk-acc-item:hover {
+    border-color: #cbd5e1;
+}
+
+.uk-acc-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    user-select: none;
+}
+
+.uk-acc-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.uk-acc-num {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #eff6ff;
+    color: #003399;
+    font-size: 11px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.uk-acc-title strong {
+    font-size: 13px;
+    color: #1e293b;
+}
+
+.uk-acc-chevron {
+    font-size: 14px;
+    color: #94a3b8;
+    transition: transform 0.2s ease;
+}
+
+.uk-acc-item.active .uk-acc-chevron {
+    transform: rotate(180deg);
+    color: #003399;
+}
+
+.uk-acc-body {
+    display: none;
+    padding: 0 14px 14px 46px;
+    font-size: 12.5px;
+    color: #64748b;
+    line-height: 1.5;
+}
+
+.uk-acc-item.active .uk-acc-body {
+    display: block;
+}
+
+.uk-mini-action-btn {
+    margin-top: 8px;
+    padding: 6px 12px;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #003399;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.uk-mini-action-btn:hover {
+    background: #dbeafe;
+}
+
+/* 6. Card Footer */
+.uk-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11.5px;
+    color: #94a3b8;
+    padding-top: 14px;
+    border-top: 1px solid #f1f5f9;
+}
+
+.uk-live-dot-pulse {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: #059669;
+    font-weight: 600;
+}
+
+@keyframes ukSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes ukShake {
+    10%, 90% { transform: translate3d(-1px, 0, 0); }
+    20%, 80% { transform: translate3d(2px, 0, 0); }
+    30%, 50%, 70% { transform: translate3d(-3px, 0, 0); }
+    40%, 60% { transform: translate3d(3px, 0, 0); }
+}
+</style>
+<script>
+if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+    document.documentElement.classList.add('uk-is-offline');
+}
+</script>
+
 </head>
 <body>
+
+    <!-- ========================================== -->
+    <!-- OFFLINE DETECTION & REFRESH ERROR SCREEN  -->
+    <!-- ========================================== -->
+    <!-- ============================================================== -->
+    <!-- MICROSOFT/EDGE INSPIRED PROFESSIONAL OFFLINE DETECTION SCREEN  -->
+    <!-- ============================================================== -->
+    <!-- ============================================================== -->
+    <!-- 100% SOLID FULL-SCREEN OFFLINE DETECTION & ERROR SYSTEM        -->
+    <!-- (ZERO WEBSITE VISIBLE BEHIND - PURE EDGE-TO-EDGE COVERAGE)    -->
+    <!-- ============================================================== -->
+    <div id="uk-offline-screen" class="uk-offline-screen" role="alertdialog" aria-modal="true" aria-labelledby="uk-offline-title" aria-describedby="uk-offline-desc">
+        <div class="uk-offline-container">
+            <!-- 1. Connection Path Diagram (Desktop Laptop vs Mobile Phone) -->
+            <div class="uk-net-diagram">
+                <div class="uk-diagram-node uk-node-active" id="uk-node-device">
+                    <div class="uk-node-icon-box">
+                        <svg class="uk-svg-laptop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="4" width="18" height="12" rx="2"></rect>
+                            <line x1="2" y1="20" x2="22" y2="20"></line>
+                        </svg>
+                        <svg class="uk-svg-mobile" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="5" y="2" width="14" height="20" rx="2"></rect>
+                            <line x1="12" y1="18" x2="12.01" y2="18"></line>
+                        </svg>
+                    </div>
+                    <span class="uk-node-label" id="uk-device-label">Your Device</span>
+                </div>
+
+                <div class="uk-diagram-connector" id="uk-connector-1">
+                    <div class="uk-connector-line"></div>
+                    <div class="uk-connector-badge" id="uk-badge-cross-1">✕</div>
+                </div>
+
+                <div class="uk-diagram-node uk-node-disconnected" id="uk-node-wifi">
+                    <div class="uk-node-icon-box">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5 12.55a11 11 0 0 1 14.08 0"></path>
+                            <path d="M1.42 9a16 16 0 0 1 21.16 0"></path>
+                            <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+                            <line x1="12" y1="20" x2="12.01" y2="20"></line>
+                        </svg>
+                    </div>
+                    <span class="uk-node-label">Wi-Fi / Data</span>
+                </div>
+
+                <div class="uk-diagram-connector" id="uk-connector-2">
+                    <div class="uk-connector-line"></div>
+                    <div class="uk-connector-badge" id="uk-badge-cross-2">✕</div>
+                </div>
+
+                <div class="uk-diagram-node uk-node-disconnected" id="uk-node-web">
+                    <div class="uk-node-icon-box">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="2" y1="12" x2="22" y2="12"></line>
+                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                        </svg>
+                    </div>
+                    <span class="uk-node-label">Internet</span>
+                </div>
+            </div>
+
+            <!-- 2. Yellow Status Alert Banner -->
+            <div class="uk-offline-alert-banner" id="uk-offline-banner">
+                <div class="uk-alert-icon" id="uk-alert-emoji">⚠️</div>
+                <div class="uk-alert-content">
+                    <strong id="uk-alert-main-title">Wi-Fi or Mobile Data is disconnected.</strong>
+                    <span id="uk-alert-sub-title">Your device cannot reach the network right now.</span>
+                </div>
+            </div>
+
+            <!-- 3. Titles -->
+            <div class="uk-offline-text-header">
+                <h2 class="uk-offline-main-title" id="uk-offline-title">Looks like you're not connected to the internet</h2>
+                <p class="uk-offline-hindi-lead">इंटरनेट कनेक्शन उपलब्ध नहीं है</p>
+                <p class="uk-offline-sub-message" id="uk-offline-desc">
+                    Let's get you back online so you can view Umang Kakkad's Academic Portfolio!
+                </p>
+                <div class="uk-error-code-chip">ERR_INTERNET_DISCONNECTED</div>
+            </div>
+
+            <!-- 4. Action Row -->
+            <div class="uk-offline-actions-row">
+                <button id="uk-offline-btn" class="uk-action-primary-btn" onclick="window.ukRetryConnection()" type="button">
+                    <svg id="uk-offline-btn-icon" class="uk-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M23 4v6h-6"></path>
+                        <path d="M1 20v-6h6"></path>
+                        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                    </svg>
+                    <span id="uk-offline-btn-text">Refresh / Try Again</span>
+                </button>
+                <button class="uk-action-troubleshoot-btn" onclick="window.ukToggleRecommendations()" type="button" id="uk-troubleshoot-btn">
+                    <span>🛠️ Recommendations</span>
+                    <span class="uk-arrow" id="uk-rec-arrow">▾</span>
+                </button>
+            </div>
+
+            <!-- Error/Success Toast -->
+            <div id="uk-offline-toast" class="uk-offline-toast" style="display: none;"></div>
+
+            <!-- 5. Expandable Recommendations -->
+            <div class="uk-recommendations-wrapper" id="uk-recommendations-box">
+                <div class="uk-rec-header">
+                    <strong>Recommendations</strong>
+                    <p>To try to fix the problem, try the recommendations in the order below:</p>
+                </div>
+                
+                <div class="uk-accordion-list">
+                    <div class="uk-acc-item active" onclick="window.ukToggleAccordion(this)">
+                        <div class="uk-acc-head">
+                            <div class="uk-acc-title">
+                                <span class="uk-acc-num">1</span>
+                                <strong>Turn on Wi-Fi or Mobile Data</strong>
+                            </div>
+                            <span class="uk-acc-chevron">▾</span>
+                        </div>
+                        <div class="uk-acc-body">
+                            <p>Wi-Fi or cellular data appears to be turned off. Turn on Wi-Fi or Mobile Data in your device settings.</p>
+                            <button type="button" class="uk-mini-action-btn" onclick="event.stopPropagation(); window.ukRetryConnection();">Check Connection Now</button>
+                        </div>
+                    </div>
+
+                    <div class="uk-acc-item" onclick="window.ukToggleAccordion(this)">
+                        <div class="uk-acc-head">
+                            <div class="uk-acc-title">
+                                <span class="uk-acc-num">2</span>
+                                <strong>Turn off Airplane Mode</strong>
+                            </div>
+                            <span class="uk-acc-chevron">▾</span>
+                        </div>
+                        <div class="uk-acc-body">
+                            <p>If Airplane (Flight) mode is enabled on your phone or PC, all network signals are disabled. Turn it off to reconnect.</p>
+                        </div>
+                    </div>
+
+                    <div class="uk-acc-item" onclick="window.ukToggleAccordion(this)">
+                        <div class="uk-acc-head">
+                            <div class="uk-acc-title">
+                                <span class="uk-acc-num">3</span>
+                                <strong>Check Router, Hotspot or Modem</strong>
+                            </div>
+                            <span class="uk-acc-chevron">▾</span>
+                        </div>
+                        <div class="uk-acc-body">
+                            <p>If you are connected to a router with no internet access, restart your router or check your internet service provider.</p>
+                        </div>
+                    </div>
+
+                    <div class="uk-acc-item" onclick="window.ukToggleAccordion(this)">
+                        <div class="uk-acc-head">
+                            <div class="uk-acc-title">
+                                <span class="uk-acc-num">4</span>
+                                <strong>Automatic Live Reconnection</strong>
+                            </div>
+                            <span class="uk-acc-chevron">▾</span>
+                        </div>
+                        <div class="uk-acc-body">
+                            <p>No extra steps needed! This page is actively listening for your signal. The moment internet is back, the website will automatically open.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. Card Footer -->
+            <div class="uk-card-footer">
+                <span>Umang Kakkad • Official Academic Portfolio</span>
+                <span class="uk-live-dot-pulse">● Auto-Reconnect Active</span>
+            </div>
+        </div>
+    </div>
+            </div>
+
+            <!-- 6. Card Footer -->
+            <div class="uk-card-footer">
+                <span>Umang Kakkad • Official Academic Portfolio</span>
+                <span class="uk-live-dot-pulse">● Auto-Reconnect Active</span>
+            </div>
+        </div>
+    </div>
+    </div>
+
 
   <!-- TOP BAR -->
   <header class="topbar">
@@ -1042,5 +1726,181 @@
     // Initialize session banner check
     
   </script>
+
+<!-- Offline Connection Manager Controller -->
+<!-- Offline Connection Manager Controller -->
+<script id="uk-offline-manager-script">
+(function() {
+    'use strict';
+
+    function getEl(id) { return document.getElementById(id); }
+
+    const overlay = getEl('uk-offline-screen');
+    const banner = getEl('uk-offline-banner');
+    const alertEmoji = getEl('uk-alert-emoji');
+    const alertMainTitle = getEl('uk-alert-main-title');
+    const alertSubTitle = getEl('uk-alert-sub-title');
+    const retryBtn = getEl('uk-offline-btn');
+    const btnText = getEl('uk-offline-btn-text');
+    const toast = getEl('uk-offline-toast');
+
+    const nodeWifi = getEl('uk-node-wifi');
+    const nodeWeb = getEl('uk-node-web');
+    const conn1 = getEl('uk-connector-1');
+    const conn2 = getEl('uk-connector-2');
+    const badgeCross1 = getEl('uk-badge-cross-1');
+    const badgeCross2 = getEl('uk-badge-cross-2');
+
+    window.ukToggleAccordion = function(item) {
+        if (item) item.classList.toggle('active');
+    };
+
+    window.ukToggleRecommendations = function() {
+        const box = getEl('uk-recommendations-box');
+        const arrow = getEl('uk-rec-arrow');
+        if (!box) return;
+        if (box.style.display === 'none') {
+            box.style.display = 'block';
+            if (arrow) arrow.textContent = '▾';
+        } else {
+            box.style.display = 'none';
+            if (arrow) arrow.textContent = '▸';
+        }
+    };
+
+    async function testActualConnection(timeoutMs = 3000) {
+        if (!navigator.onLine) return false;
+        if (window.location.protocol === 'file:') return true;
+
+        try {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), timeoutMs);
+            await fetch('https://cdn.jsdelivr.net/favicon.ico?_ping=' + Date.now(), {
+                method: 'HEAD',
+                mode: 'no-cors',
+                cache: 'no-store',
+                signal: controller.signal
+            });
+            clearTimeout(timer);
+            return true;
+        } catch (_) {
+            return navigator.onLine;
+        }
+    }
+
+    function showOfflineScreen() {
+        document.documentElement.classList.add('uk-is-offline');
+        if (overlay) overlay.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+
+        // Diagram in offline state
+        if (nodeWifi) nodeWifi.className = 'uk-diagram-node uk-node-disconnected';
+        if (nodeWeb) nodeWeb.className = 'uk-diagram-node uk-node-disconnected';
+        if (conn1) conn1.classList.remove('connected');
+        if (conn2) conn2.classList.remove('connected');
+        if (badgeCross1) badgeCross1.textContent = '✕';
+        if (badgeCross2) badgeCross2.textContent = '✕';
+
+        // Banner in yellow offline state
+        if (banner) banner.className = 'uk-offline-alert-banner';
+        if (alertEmoji) alertEmoji.textContent = '⚠️';
+        if (alertMainTitle) alertMainTitle.textContent = 'Wi-Fi or Mobile Data is disconnected.';
+        if (alertSubTitle) alertSubTitle.textContent = 'Your device cannot reach the network right now.';
+
+        if (retryBtn) {
+            retryBtn.classList.remove('is-loading', 'connected');
+        }
+        if (btnText) btnText.textContent = 'Refresh / Try Again';
+        if (toast) toast.style.display = 'none';
+    }
+
+    function hideOfflineScreen(reload = false) {
+        document.documentElement.classList.remove('uk-is-offline');
+        document.body.style.overflow = '';
+        if (overlay) overlay.style.display = 'none';
+        if (reload) window.location.reload();
+    }
+
+    function handleOnlineRestored() {
+        // Diagram in green connected state
+        if (nodeWifi) nodeWifi.className = 'uk-diagram-node uk-node-connected';
+        if (nodeWeb) nodeWeb.className = 'uk-diagram-node uk-node-connected';
+        if (conn1) conn1.classList.add('connected');
+        if (conn2) conn2.classList.add('connected');
+        if (badgeCross1) badgeCross1.textContent = '✔';
+        if (badgeCross2) badgeCross2.textContent = '✔';
+
+        // Banner in green restored state
+        if (banner) banner.className = 'uk-offline-alert-banner connected';
+        if (alertEmoji) alertEmoji.textContent = '✅';
+        if (alertMainTitle) alertMainTitle.textContent = 'Internet Connection Restored!';
+        if (alertSubTitle) alertSubTitle.textContent = 'Your device is back online. Opening website...';
+
+        if (retryBtn) {
+            retryBtn.classList.remove('is-loading');
+            retryBtn.classList.add('connected');
+        }
+        if (btnText) btnText.textContent = '✅ Connected! Opening Website...';
+
+        if (toast) {
+            toast.className = 'uk-offline-toast success';
+            toast.textContent = '✅ Internet Connected! Opening website now...';
+            toast.style.display = 'block';
+        }
+
+        setTimeout(() => {
+            hideOfflineScreen(true);
+        }, 800);
+    }
+
+    window.ukRetryConnection = async function() {
+        if (!retryBtn) return;
+        retryBtn.classList.add('is-loading');
+        if (btnText) btnText.textContent = 'Checking Connection...';
+        if (toast) toast.style.display = 'none';
+
+        const isOnline = await testActualConnection(3500);
+
+        if (isOnline) {
+            handleOnlineRestored();
+        } else {
+            retryBtn.classList.remove('is-loading');
+            if (btnText) btnText.textContent = 'Refresh / Try Again';
+            if (toast) {
+                toast.className = 'uk-offline-toast error';
+                toast.textContent = '⚠️ Still offline! Please turn on Wi-Fi or Mobile Data, then try again.';
+                toast.style.display = 'block';
+            }
+        }
+    };
+
+    window.addEventListener('offline', () => {
+        showOfflineScreen();
+    });
+
+    window.addEventListener('online', async () => {
+        const reallyOnline = await testActualConnection(2500);
+        if (reallyOnline) {
+            handleOnlineRestored();
+        } else {
+            showOfflineScreen();
+        }
+    });
+
+    if (!navigator.onLine) {
+        showOfflineScreen();
+    } else {
+        hideOfflineScreen(false);
+    }
+
+    if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+        window.addEventListener('load', () => {
+            const swPath = window.location.pathname.includes('/admin/') ? '../sw.js' : './sw.js';
+            navigator.serviceWorker.register(swPath).catch(() => {});
+        });
+    }
+})();
+</script>
+
 </body>
 </html>
