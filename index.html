@@ -117,7 +117,6 @@
                         rgba(0,38,110,.70));
             }
 
-            .hero-bg-info,
         }
 
         @media (max-width: 640px) {
@@ -217,12 +216,17 @@
                 gap: .75rem !important;
             }
 
-            .header-identity > div:first-child {
-                width: 58px;
-                height: 58px;
-                min-width: 58px;
-                border-width: 3px;
-                font-size: 1.35rem;
+            /* UK Logo Mobile: Strictly remove any outer square box, border, or background */
+            .header-identity > div:first-child,
+            .header-uk-badge {
+                border: 0 none transparent !important;
+                border-width: 0 !important;
+                background: transparent !important;
+                box-shadow: none !important;
+                outline: none !important;
+                width: auto !important;
+                height: auto !important;
+                min-width: 0 !important;
             }
 
             .header-identity h1 {
@@ -268,8 +272,12 @@
             }
 
             .uk-badge-ring {
-                width: 62px !important;
-                height: 62px !important;
+                width: 58px !important;
+                height: 58px !important;
+                min-width: 58px !important;
+                min-height: 58px !important;
+                border-radius: 50% !important;
+                border-width: 2.5px !important;
             }
 
             .uk-badge-text {
@@ -278,6 +286,40 @@
 
             .header-signature-inline img {
                 height: 24px !important;
+            }
+
+            /* Mobile hero layout & spacing fix: eliminates massive blue gap between Menu and greeting message */
+            #home {
+                min-height: auto !important;
+            }
+
+            .hero-content {
+                padding-top: 1.25rem !important;
+                padding-bottom: 2.25rem !important;
+                min-height: auto !important;
+                align-items: flex-start !important;
+            }
+        }
+
+        /* Hero Greeting Pill Single-Line Responsive Styling */
+        #hero-greeting-pill {
+            white-space: nowrap !important;
+            max-width: 100% !important;
+        }
+        @media (max-width: 420px) {
+            #hero-greeting-pill {
+                font-size: 11px !important;
+                padding-left: 10px !important;
+                padding-right: 10px !important;
+                gap: 5px !important;
+            }
+        }
+        @media (max-width: 360px) {
+            #hero-greeting-pill {
+                font-size: 10px !important;
+                padding-left: 8px !important;
+                padding-right: 8px !important;
+                gap: 4px !important;
             }
         }
 
@@ -1527,7 +1569,7 @@ if (typeof navigator !== 'undefined' && navigator.onLine === false) {
     </nav>
 
     <!-- Hero Banner with Full-Width Transparent Academic/Event Slideshow -->
-    <section id="home" class="relative overflow-hidden border-b-4 border-suOrange min-h-[560px] lg:min-h-[590px]">
+    <section id="home" class="relative overflow-hidden border-b-4 border-suOrange min-h-0 sm:min-h-[560px] lg:min-h-[590px]">
 
         <!-- Full Hero Photo Slideshow — preserves every photo's original aspect ratio -->
         <div class="hero-bg-slideshow" id="heroBgSlideshow">
@@ -1563,14 +1605,16 @@ if (typeof navigator !== 'undefined' && navigator.onLine === false) {
         <!-- Transparent blue layer -->
         <div class="hero-bg-overlay"></div>
 <!-- Main hero content -->
-        <div class="hero-content max-w-7xl mx-auto px-4 lg:px-8 py-24 lg:py-32 flex items-center min-h-[560px] lg:min-h-[590px]">
+        <div class="hero-content max-w-7xl mx-auto px-4 lg:px-8 pt-5 pb-10 sm:py-16 lg:py-32 flex items-start sm:items-center min-h-0 sm:min-h-[560px] lg:min-h-[590px]">
             <div class="text-white max-w-3xl">
                 <!-- Dynamic Time-Based Greeting Badge -->
-                <div id="hero-greeting-pill" class="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white/15 backdrop-blur-md border border-white/25 text-white text-xs sm:text-sm font-bold shadow-lg shadow-black/20 mb-3.5 tracking-wide">
-                    <span id="hero-greeting-icon" class="text-base sm:text-lg">☀️</span>
-                    <span id="hero-greeting-text">Good Morning</span>, Welcome to My Portfolio!
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping ml-1"></span>
-                    <span id="hero-greeting-time" class="text-[11px] text-amber-300 font-semibold border-l border-white/30 pl-2 ml-1"></span>
+                <div id="hero-greeting-pill" class="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-white/15 backdrop-blur-md border border-white/25 text-white text-[11px] sm:text-xs md:text-sm font-medium shadow-lg shadow-black/20 mb-3 tracking-normal whitespace-nowrap max-w-full overflow-hidden">
+                    <span id="hero-greeting-icon" class="text-xs sm:text-base flex-shrink-0">🌅</span>
+                    <span id="hero-greeting-text" class="font-bold flex-shrink-0">Good Morning</span>
+                    <span class="text-white/60 font-normal flex-shrink-0">•</span>
+                    <span class="font-medium flex-shrink-0">Welcome to my digital world</span>
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse flex-shrink-0 ml-0.5"></span>
+                    <span id="hero-greeting-time" class="text-[10px] sm:text-[11px] text-amber-300 font-medium border-l border-white/30 pl-1.5 ml-1 flex-shrink-0 hidden md:inline"></span>
                 </div>
 
                 <h2 class="text-suOrange text-xl lg:text-2xl font-semibold mb-2 serif-heading">
