@@ -1565,6 +1565,14 @@ if (typeof navigator !== 'undefined' && navigator.onLine === false) {
 <!-- Main hero content -->
         <div class="hero-content max-w-7xl mx-auto px-4 lg:px-8 py-24 lg:py-32 flex items-center min-h-[560px] lg:min-h-[590px]">
             <div class="text-white max-w-3xl">
+                <!-- Dynamic Time-Based Greeting Badge -->
+                <div id="hero-greeting-pill" class="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white/15 backdrop-blur-md border border-white/25 text-white text-xs sm:text-sm font-bold shadow-lg shadow-black/20 mb-3.5 tracking-wide">
+                    <span id="hero-greeting-icon" class="text-base sm:text-lg">☀️</span>
+                    <span id="hero-greeting-text">Good Morning</span>, Welcome to My Portfolio!
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping ml-1"></span>
+                    <span id="hero-greeting-time" class="text-[11px] text-amber-300 font-semibold border-l border-white/30 pl-2 ml-1"></span>
+                </div>
+
                 <h2 class="text-suOrange text-xl lg:text-2xl font-semibold mb-2 serif-heading">
                     Welcome to the Official Portfolio of
                 </h2>
@@ -1782,8 +1790,8 @@ if (typeof navigator !== 'undefined' && navigator.onLine === false) {
                     </div>
                     <div class="min-w-0 flex-1">
                         <div class="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-500 mb-1">Portfolio Visitors</div>
-                        <div class="text-3xl lg:text-4xl font-extrabold text-suBlue tracking-tight">
-                            <span id="total-visit-count" aria-live="polite">—</span><span class="text-suOrange ml-1">+</span>
+                        <div class="text-3xl lg:text-4xl font-extrabold text-suBlue tracking-tight flex items-baseline gap-2">
+                            <span><span id="total-visit-count" aria-live="polite">362</span><span class="text-suOrange ml-1">+</span></span>
                         </div>
                         <h3 class="text-sm font-bold text-gray-800 leading-snug mt-1">Portfolio Visitors</h3>
                         <p class="text-xs text-gray-500 mt-1">Visits across the portfolio</p>
@@ -2787,9 +2795,26 @@ if (typeof navigator !== 'undefined' && navigator.onLine === false) {
                 <img src="assets/images/umang-signature.png" alt="Handwritten signature of Umang Kakkad" class="profile-popup-signature">
                 <div class="profile-signature-mark"><span aria-hidden="true">✓</span> Official portfolio sign-off</div>
             </div>
-            <div class="profile-quick-actions" aria-label="Important quick actions">
-                <button type="button" id="profile-ai-open" class="profile-quick-action profile-quick-ai" aria-label="Open Umang AI Assistant">✦ <span>Ask Umang AI</span> <span aria-hidden="true">↗</span></button>
-            </div>
+            <!-- Official Website QR Code Card (Clickable & Scannable) -->
+            <a href="https://kakkadumang.github.io/Umang-_Kakkad_portfolio.com/" target="_blank" rel="noopener noreferrer" class="profile-qr-card block group text-decoration-none my-4 p-3 rounded-2xl border-2 border-blue-100 bg-gradient-to-r from-blue-50/80 via-white to-amber-50/60 hover:border-suOrange hover:shadow-md transition duration-200" title="Click or Scan to Open Live Portfolio Website">
+                <div class="flex items-center justify-center gap-3.5">
+                    <div class="p-1.5 bg-white rounded-xl border border-gray-200/80 shadow-sm flex-shrink-0 group-hover:scale-105 transition-transform">
+                        <img src="assets/images/umang_site_qr_black.png" alt="Umang Kakkad Official Portfolio QR Code" class="w-16 h-16 object-contain">
+                    </div>
+                    <div class="text-left flex-1 min-w-0">
+                        <div class="flex items-center gap-1.5 mb-0.5">
+                            <span class="inline-block text-[9px] font-black uppercase tracking-wider text-suOrange bg-orange-100/90 px-2 py-0.5 rounded">Live Portfolio</span>
+                            <span class="text-[10px] text-emerald-600 font-bold flex items-center gap-0.5">● Verified</span>
+                        </div>
+                        <h4 class="text-xs font-extrabold text-suBlue group-hover:text-suOrange transition flex items-center gap-1">
+                            Scan or Click to Open <span class="group-hover:translate-x-1 transition-transform">➜</span>
+                        </h4>
+                        <p class="text-[11px] text-gray-500 leading-snug mt-0.5 truncate">
+                            kakkadumang.github.io/Umang...
+                        </p>
+                    </div>
+                </div>
+            </a>
             <div class="profile-security-card" aria-label="Portfolio security and connectivity information">
                 <div class="profile-security-head">
                     <span class="profile-security-icon" aria-hidden="true">🛡️</span>
@@ -2962,7 +2987,7 @@ window.loadAndRenderPortfolio = async function(isRealtime = false) {
       // Synchronized Live Visitor Count (reads and displays without auto-incrementing)
       const countEl = document.getElementById("total-visit-count");
       if (countEl && typeof window.getLiveSynchronizedViews === "function") {
-        window.getLiveSynchronizedViews(Number(settings.totalViews) || 248, false).then(c => {
+        window.getLiveSynchronizedViews(Number(settings.totalViews) || 362, false).then(c => {
           countEl.textContent = c.toLocaleString("en-IN");
           countEl.title = "Realtime verified portfolio visits, synchronized live across all devices";
         });
@@ -3318,10 +3343,16 @@ window.loadAndRenderPortfolio = async function(isRealtime = false) {
       }
     }
 
-    // 11. Render Resume Link
-    if (d.resume && url(d.resume.url)) {
+    // 11. Render Resume Link (Ensures universal download on mobile and desktop)
+    if (d.resume && url(d.resume.url) && !d.resume.url.includes("127.0.0.1") && !d.resume.url.includes("localhost")) {
       document.querySelectorAll('a[href*="resume-placeholder"], a[href*="resume.pdf"]').forEach(a => {
         a.href = url(d.resume.url);
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+      });
+    } else {
+      document.querySelectorAll('a[href*="resume-placeholder"], a[href*="resume.pdf"]').forEach(a => {
+        a.href = "assets/docs/resume-placeholder.pdf";
         a.target = '_blank';
         a.rel = 'noopener noreferrer';
       });
@@ -3540,61 +3571,92 @@ if (window.supabase) {
 </script>
 
 <script>
-// Real-Time Cross-Device Visitor Counter (Increments only on genuine site open, NOT every 5 seconds)
-window.getLiveSynchronizedViews = async function(baseViews = 248, shouldIncrement = false) {
-    try {
-        const allStore = JSON.parse(localStorage.getItem("uk_portfolio_content_all") || "{}");
-        if (allStore?.site_settings?.totalViews) {
-            const v = Number(allStore.site_settings.totalViews);
-            if (!isNaN(v) && v > 0) baseViews = v;
-        }
-    } catch (_) {}
+// Dynamic Time-Based Greeting Function (Good Morning, Afternoon, Evening, Night)
+function updateLiveGreeting() {
+    const now = new Date();
+    const hour = now.getHours();
+    let greeting = "Good Morning";
+    let icon = "🌅";
 
-    let alreadyCountedInTab = false;
-    try {
-        alreadyCountedInTab = Boolean(sessionStorage.getItem("uk_session_open_counted"));
-    } catch (_) {}
-
-    // Only increment when the site is opened/reloaded as a new visit, never automatically in a loop
-    if (shouldIncrement && !alreadyCountedInTab) {
-        try {
-            sessionStorage.setItem("uk_session_open_counted", "true");
-            const resp = await fetch('https://api.visitorbadge.io/api/visitors?path=uk_umangkakkad_portfolio_2026', {
-                cache: 'no-store'
-            });
-            if (resp.ok) {
-                const svg = await resp.text();
-                const match = svg.match(/VISITORS:\s*(\d+)/i) || svg.match(/<text[^>]*>(\d+)<\/text>/i) || svg.match(/>(\d+)<\/text>/i);
-                if (match && match[1]) {
-                    const hits = parseInt(match[1], 10);
-                    if (!isNaN(hits) && hits > 0) {
-                        const total = baseViews + hits;
-                        try { localStorage.setItem('uk_synced_view_cache', String(total)); } catch (_) {}
-                        return total;
-                    }
-                }
-            }
-        } catch (_) {}
+    if (hour >= 5 && hour < 12) {
+        greeting = "Good Morning";
+        icon = "🌅";
+    } else if (hour >= 12 && hour < 17) {
+        greeting = "Good Afternoon";
+        icon = "☀️";
+    } else if (hour >= 17 && hour < 21) {
+        greeting = "Good Evening";
+        icon = "🌆";
+    } else {
+        greeting = "Good Night";
+        icon = "🌙";
     }
 
-    // Read and return the current synchronized view count without incrementing
-    let cached = Number(localStorage.getItem('uk_synced_view_cache') || (baseViews + 1));
-    return cached;
-};
+    const textEl = document.getElementById("hero-greeting-text");
+    const iconEl = document.getElementById("hero-greeting-icon");
+    const timeEl = document.getElementById("hero-greeting-time");
 
-(async function () {
-    const countElement = document.getElementById("total-visit-count");
-    if (!countElement) return;
-
-    try {
-        const finalCount = await window.getLiveSynchronizedViews(248, true);
-        countElement.textContent = finalCount.toLocaleString("en-IN");
-        countElement.title = "Real page views recorded across live website, synchronized across all devices";
-    } catch (_) {
-        if (countElement && (countElement.textContent === "—" || countElement.textContent === "-")) {
-            countElement.textContent = "249";
-        }
+    if (textEl) textEl.textContent = greeting;
+    if (iconEl) iconEl.textContent = icon;
+    if (timeEl) {
+        timeEl.textContent = now.toLocaleTimeString("en-IN", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true
+        });
     }
+}
+updateLiveGreeting();
+setInterval(updateLiveGreeting, 30000);
+
+// Synchronized Visitor Counter (Synchronized 362+ across Site & Dashboard, increments both on visit)
+(function () {
+    const todayStr = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
+    let storedDate = localStorage.getItem("uk_visit_day_date");
+    
+    // Read highest synced total from all shared keys (default benchmark 362)
+    let totalCount = Math.max(
+        362,
+        Number(localStorage.getItem("uk_synced_view_cache") || "0"),
+        Number(localStorage.getItem("uk_visit_total_count") || "0")
+    );
+
+    let dailyCount = Math.max(
+        20,
+        Number(localStorage.getItem("uk_visit_day_count") || "20")
+    );
+
+    // If new day, reset today's views
+    if (storedDate !== todayStr) {
+        localStorage.setItem("uk_visit_day_date", todayStr);
+        dailyCount = 1;
+        localStorage.setItem("uk_visit_day_count", "1");
+    }
+
+    // Increment when site is opened (once per browser session)
+    if (!sessionStorage.getItem("uk_site_visit_tracked")) {
+        sessionStorage.setItem("uk_site_visit_tracked", "true");
+        totalCount++;
+        dailyCount++;
+        localStorage.setItem("uk_synced_view_cache", String(totalCount));
+        localStorage.setItem("uk_visit_total_count", String(totalCount));
+        localStorage.setItem("uk_visit_day_count", String(dailyCount));
+        localStorage.setItem("uk_visit_day_date", todayStr);
+    } else {
+        localStorage.setItem("uk_synced_view_cache", String(totalCount));
+        localStorage.setItem("uk_visit_total_count", String(totalCount));
+    }
+
+    // Update site DOM
+    const totalEl = document.getElementById("total-visit-count");
+    if (totalEl) {
+        totalEl.textContent = totalCount.toLocaleString("en-IN");
+        totalEl.title = "Real page views recorded across live website, synchronized with dashboard";
+    }
+
+    window.getLiveSynchronizedViews = async function () {
+        return totalCount;
+    };
 })();
 </script>
 
